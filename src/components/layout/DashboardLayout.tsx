@@ -31,7 +31,7 @@ export const DashboardLayout: React.FC = () => {
   }, [])
 
   return (
-    <div className="flex h-screen w-full overflow-hidden font-sans relative">
+    <div className="flex h-[100dvh] w-full overflow-hidden font-sans relative">
       {/* Background */}
       <div className="fixed inset-0 bg-gradient-to-br from-[#0a0612] via-[#0f0a1f] to-[#0d0918]">
         {/* Ambient glow orbs */}
@@ -109,7 +109,7 @@ export const DashboardLayout: React.FC = () => {
       </AnimatePresence>
 
       {/* CENTER COLUMN: Oracle */}
-      <main className="flex-1 flex flex-col min-w-0 relative z-10">
+      <main className="flex-1 flex flex-col min-w-0 min-h-0 relative z-10">
         {/* Left Toggle Button - Only visible when sidebar is closed */}
         <AnimatePresence>
           {!isLeftOpen && (

@@ -136,7 +136,7 @@ export const ChatInterface: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col relative bg-gradient-to-b from-slate-950 via-violet-950/20 to-slate-950">
+    <div className="h-full min-h-0 flex flex-col relative bg-gradient-to-b from-slate-950 via-violet-950/20 to-slate-950">
       {/* Ambient background effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-violet-500/5 rounded-full blur-3xl" />
@@ -168,7 +168,7 @@ export const ChatInterface: React.FC = () => {
       </motion.div>
 
       {/* Messages Area */}
-      <div className="relative z-10 flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6" ref={scrollRef}>
+      <div className="relative z-10 flex-1 overflow-y-auto min-h-0 custom-scrollbar p-6 space-y-6" ref={scrollRef}>
         <AnimatePresence>
           {chatHistory.map((msg, index) => (
             <motion.div
@@ -220,7 +220,7 @@ export const ChatInterface: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative z-20 p-4 bg-slate-900/50 backdrop-blur-xl border-t border-violet-400/10"
+        className="relative z-20 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-slate-900/50 backdrop-blur-xl border-t border-violet-400/10"
       >
         <div className="flex gap-3">
           <div className="flex-1 relative">
