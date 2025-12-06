@@ -9,6 +9,7 @@ export interface BirthChartData {
 }
 
 export const getBirthChart = async (data: BirthChartData) => {
+  console.log("Calling Birth Chart API with:", data);
   try {
     const response = await axios.post('/api/birth-chart', {
       ...data,

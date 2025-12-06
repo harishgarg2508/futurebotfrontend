@@ -1,303 +1,251 @@
-'use client';
+"use client"
 
-import React, { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import StepName from '@/components/onboarding/StepName';
-import StepDate from '@/components/onboarding/StepDate';
-import StepTime from '@/components/onboarding/StepTime';
-import StepLocation from '@/components/onboarding/StepLocation';
-import PlanetarySidebar from '@/components/dashboard/PlanetarySidebar';
-import ChatInterface from '@/components/chat/ChatInterface';
-import { getBirthChart } from '@/services/api/birthChart';
-import { Loader2, Sparkles } from 'lucide-react';
-import axios from 'axios';
-import StepLogin from '@/components/onboarding/StepLogin';
-import { useAuth } from '@/context/AuthContext';
-import { db } from '@/lib/firebase';
-import { doc, setDoc, collection, addDoc, getDocs } from 'firebase/firestore';
+import { useState, useEffect } from "react"
+import { AnimatePresence, motion } from "framer-motion"
+import { DashboardLayout } from "@/components/layout/DashboardLayout"
+import { useAuth } from "@/context/AuthContext"
+import StepName from "@/components/onboarding/StepName"
+import StepDate from "@/components/onboarding/StepDate"
+import StepTime from "@/components/onboarding/StepTime"
+import StepLocation from "@/components/onboarding/StepLocation"
+import StepLogin from "@/components/onboarding/StepLogin"
+import FloatingStars from "@/components/onboarding/FloatingStars"
+import { Sparkles, Loader2, LogIn } from "lucide-react"
+import { getBirthChart } from "@/services/api/birthChart"
+import { useAppStore } from "@/lib/store"
 
-import ChartList from '@/components/dashboard/ChartList';
-
-type Phase = 'landing' | 'dashboard' | 'name' | 'date' | 'time' | 'location' | 'login' | 'awakening' | 'consultation';
+type Phase = "landing" | "name" | "date" | "time" | "location" | "login" | "awakening" | "dashboard"
 
 export default function Home() {
-  const [phase, setPhase] = useState<Phase>('landing');
-  const [userData, setUserData] = useState({
-    name: '',
-    date: '',
-    time: '',
-    location: { name: '', lat: 0, lon: 0 },
-  });
-  const [chartData, setChartData] = useState<any>(null);
-  const [awakeningMessage, setAwakeningMessage] = useState('Consulting the Ephemeris...');
-  const { user } = useAuth();
+  const { user, signInWithGoogle } = useAuth()
+  const { setCurrentProfile, setChartData } = useAppStore()
+  const [phase, setPhase] = useState<Phase>("landing")
 
-  // Hydrate from LocalStorage or Firestore
-  React.useEffect(() => {
-    const hydrate = async () => {
-      // 1. Try LocalStorage
-      const saved = localStorage.getItem('vedicUser');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setUserData(parsed);
-        if (parsed.name && parsed.date && parsed.time && parsed.location?.lat) {
-           // Data loaded from local
-        }
-        return; 
-      }
+  const [onboardData, setOnboardData] = useState({
+    name: "",
+    date: "",
+    time: "",
+    lat: 0,
+    lon: 0,
+    city: "",
+  })
 
-      // 2. Try Firestore if logged in
-      if (user) {
-        try {
-          // Assuming we store the latest chart or user profile in a standard path
-          // For now, let's look for the most recent chart in the subcollection
-          const chartsRef = collection(db, 'users', user.uid, 'charts');
-          // In a real app we'd order by createdAt desc and limit 1
-          const snapshot = await getDocs(chartsRef);
-          if (!snapshot.empty) {
-            const firstDoc = snapshot.docs[0].data();
-            // Map back to userData structure if needed
-            setUserData({
-                name: firstDoc.name,
-                date: firstDoc.date,
-                time: firstDoc.time,
-                location: firstDoc.location
-            });
-            // Also save to local for next time
-            localStorage.setItem('vedicUser', JSON.stringify(firstDoc));
-          }
-        } catch (err) {
-            console.error("Hydration failed", err);
-        }
-      }
-    };
+  const handleNext = (data: Partial<typeof onboardData>) => {
+    setOnboardData((prev) => ({ ...prev, ...data }))
+    if (phase === "name") setPhase("date")
+    else if (phase === "date") setPhase("time")
+    else if (phase === "time") setPhase("location")
+    else if (phase === "location") setPhase("login")
+  }
 
-    hydrate();
-  }, [user]);
-
-  const saveUserData = async (data: typeof userData) => {
-    // Save to LocalStorage
-    localStorage.setItem('vedicUser', JSON.stringify(data));
-
-    // Save to Firestore if logged in
-    if (user) {
-      try {
-        await addDoc(collection(db, 'users', user.uid, 'charts'), {
-          ...data,
-          createdAt: new Date(),
-        });
-      } catch (e) {
-        console.error("Error saving to Firestore", e);
-      }
-    }
-  };
-
-  const handleNext = (data: any) => {
-    setUserData((prev) => ({ ...prev, ...data }));
-    
-    if (phase === 'name') setPhase('date');
-    else if (phase === 'date') setPhase('time');
-    else if (phase === 'time') setPhase('location');
-    else if (phase === 'location') {
-      setUserData((prev) => ({ ...prev, location: data }));
-      setPhase('login');
-    } else if (phase === 'login') {
-      setPhase('awakening');
-      const finalData = { ...userData }; // Ensure we have the latest
-      saveUserData(finalData);
-      fetchChart(finalData);
-    }
-  };
-
-  const handleBack = () => {
-    if (phase === 'date') setPhase('name');
-    else if (phase === 'time') setPhase('date');
-    else if (phase === 'location') setPhase('time');
-    else if (phase === 'login') setPhase('location');
-  };
-
-  const fetchChart = async (finalData: typeof userData) => {
+  const handleLogin = async () => {
     try {
-      // Simulate "Waking up" message if it takes too long
-      const timeout = setTimeout(() => {
-        setAwakeningMessage('Waking up the Oracle... please wait...');
-      }, 3000);
+      await signInWithGoogle()
+      setPhase("awakening")
+      fetchInitialChart(onboardData)
+    } catch (err) {
+      console.error("Login failed", err)
+    }
+  }
 
-      const data = await getBirthChart({
+  // Direct login for existing users - goes straight to dashboard
+  const handleDirectLogin = async () => {
+    try {
+      await signInWithGoogle()
+      setPhase("dashboard")
+    } catch (err) {
+      console.error("Login failed", err)
+    }
+  }
+
+  const fetchInitialChart = async (finalData: typeof onboardData) => {
+    try {
+      const chart = await getBirthChart({
         date: finalData.date,
         time: finalData.time,
-        lat: finalData.location.lat,
-        lon: finalData.location.lon,
-      });
-      
-      clearTimeout(timeout);
-      setChartData(data);
-      setPhase('consultation');
-    } catch (error) {
-      console.error('Failed to fetch chart:', error);
-      setAwakeningMessage('The stars are silent. Please try again later.');
-      // Ideally show a retry button here
-    }
-  };
+        lat: finalData.lat,
+        lon: finalData.lon,
+      })
 
-  const handleSendMessage = async (message: string) => {
-    // Call the Chat API route
-    const response = await axios.post('/api/chat', {
-      message,
-      userData,
-      chartData, // Pass context if needed, or let the backend handle it via session/tools
-      // Ideally, we send the message and the backend uses the tools (getTransits etc)
-      // We might need to send the user's birth details so the backend tools can use them
-    });
-    return response.data.response;
-  };
+      const newProfile = {
+        id: crypto.randomUUID(),
+        name: finalData.name,
+        date: finalData.date,
+        time: finalData.time,
+        location: {
+          lat: finalData.lat,
+          lon: finalData.lon,
+          city: finalData.city,
+        },
+      }
+
+      setCurrentProfile(newProfile)
+      setChartData(chart)
+      setPhase("dashboard")
+
+      const { addProfileToFirebase } = await import("@/services/firebaseService")
+      if (user) addProfileToFirebase(user.uid, newProfile)
+    } catch (e: any) {
+      console.error("Fetch Chart Failed:", e)
+      alert(`Failed to fetch chart: ${e.message || "Unknown Error"}. Please checking backend is running.`)
+      setPhase("dashboard")
+    }
+  }
+
+  useEffect(() => {
+    if (user && phase === "dashboard" && onboardData.name) {
+    }
+  }, [user, phase])
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center relative overflow-hidden bg-vedic-blue text-white selection:bg-vedic-gold/30">
-      {/* Background Elements */}
-      <div className="absolute inset-0 bg-[url('/stars.png')] opacity-20 pointer-events-none" />
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-vedic-blue/50 to-vedic-blue pointer-events-none" />
-      
+    <main className="min-h-screen text-[var(--color-light)] overflow-hidden relative selection:bg-[var(--color-lavender)] selection:text-white font-sans">
       <AnimatePresence mode="wait">
-        {phase === 'landing' && (
+        {/* Landing */}
+        {phase === "landing" && (
           <motion.div
             key="landing"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex flex-col items-center space-y-8 z-10"
+            className="flex flex-col items-center justify-center min-h-screen relative"
           >
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="relative"
-            >
-              <div className="w-32 h-32 rounded-full border border-vedic-gold/20 flex items-center justify-center">
-                <div className="w-24 h-24 rounded-full border border-vedic-gold/40 flex items-center justify-center">
-                  <Sparkles className="w-12 h-12 text-vedic-gold" />
-                </div>
-              </div>
-            </motion.div>
-            
-            <div className="text-center space-y-4">
-              <h1 className="text-6xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-vedic-gold to-vedic-gold-light">
-                VedicAI
-              </h1>
-              <p className="text-xl text-gray-400 font-light tracking-wide">
-                The Autonomous Astrological Agent
-              </p>
-            </div>
+            <FloatingStars />
 
-            <button
-              onClick={() => setPhase('name')}
-              className="px-8 py-4 glass-button rounded-full text-lg tracking-widest uppercase hover:bg-vedic-gold hover:text-vedic-blue transition-all duration-500"
-            >
-              Enter the Void
-            </button>
-            
-            {user && (
-              <button
-                onClick={() => setPhase('dashboard')}
-                className="mt-4 text-sm text-gray-400 hover:text-vedic-gold transition-colors"
+            <div className="relative z-10 flex flex-col items-center space-y-16">
+              {/* Logo */}
+              <motion.div
+                className="relative"
+                animate={{ y: [0, -15, 0] }}
+                transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
               >
-                View Saved Charts
-              </button>
-            )}
+                <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-lavender)] to-[var(--color-violet)] blur-3xl opacity-40 scale-150 rounded-full" />
+                <div className="relative w-28 h-28 rounded-full bg-gradient-to-br from-[var(--color-lavender)] via-[var(--color-violet)] to-[var(--color-rose)] flex items-center justify-center shadow-2xl">
+                  <Sparkles className="w-14 h-14 text-white" />
+                </div>
+              </motion.div>
+
+              {/* Title */}
+              <div className="text-center space-y-4">
+                <motion.h1
+                  className="text-6xl md:text-7xl font-light text-[var(--color-light)] tracking-tight"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  Vedic
+                  <span className="bg-gradient-to-r from-[var(--color-lavender)] to-[var(--color-rose)] bg-clip-text text-transparent">
+                    AI
+                  </span>
+                </motion.h1>
+                <motion.p
+                  className="text-[var(--color-muted)] text-lg tracking-widest uppercase"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  Celestial Wisdom
+                </motion.p>
+              </div>
+
+              {/* CTA Button */}
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="flex flex-col items-center gap-4">
+                {user ? (
+                  <motion.button
+                    onClick={() => setPhase("dashboard")}
+                    className="px-12 py-5 rounded-full btn-celestial text-lg font-medium tracking-wide"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Enter Dashboard
+                  </motion.button>
+                ) : (
+                  <>
+                    <motion.button
+                      onClick={() => setPhase("name")}
+                      className="group relative px-12 py-5 rounded-full overflow-hidden"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-lavender)] to-[var(--color-violet)] opacity-100 group-hover:opacity-90 transition-opacity" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-rose)] to-[var(--color-lavender)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <span className="relative z-10 text-white text-lg font-medium tracking-wide">
+                        Begin Your Journey
+                      </span>
+                    </motion.button>
+                    
+                    {/* Login button for existing users */}
+                    <motion.button
+                      onClick={handleDirectLogin}
+                      className="flex items-center gap-2 px-6 py-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 hover:bg-white/20 hover:text-white transition-all"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <LogIn className="w-4 h-4" />
+                      <span className="text-sm font-medium">Already have an account? Sign in</span>
+                    </motion.button>
+                  </>
+                )}
+              </motion.div>
+            </div>
           </motion.div>
         )}
 
-        {phase === 'dashboard' && (
-          <motion.div 
-            key="dashboard"
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }}
-            className="w-full min-h-screen pt-20"
-          >
-            <ChartList 
-              onSelectChart={(chart) => {
-                setUserData(chart);
-                setPhase('awakening');
-                fetchChart(chart);
-              }}
-              onNewChart={() => setPhase('name')}
-            />
-          </motion.div>
-        )}
+        {/* Onboarding Steps */}
+        {phase === "name" && <StepName key="name" onNext={(name) => handleNext({ name })} onDirectLogin={() => setPhase("dashboard")} />}
 
-        {phase === 'name' && <StepName key="name" onNext={(name) => handleNext({ name })} />}
-        
-        {phase === 'date' && (
+        {phase === "date" && (
           <StepDate
             key="date"
-            name={userData.name}
+            name={onboardData.name}
             onNext={(date) => handleNext({ date })}
-            onBack={handleBack}
+            onBack={() => setPhase("name")}
           />
         )}
-        
-        {phase === 'time' && (
-          <StepTime
-            key="time"
-            onNext={(time) => handleNext({ time })}
-            onBack={handleBack}
-          />
+
+        {phase === "time" && (
+          <StepTime key="time" onNext={(time) => handleNext({ time })} onBack={() => setPhase("date")} />
         )}
-        
-        {phase === 'location' && (
+
+        {phase === "location" && (
           <StepLocation
             key="location"
-            onNext={(location) => handleNext(location)}
-            onBack={handleBack}
+            onNext={(loc) => handleNext({ lat: loc.lat, lon: loc.lon, city: loc.name })}
+            onBack={() => setPhase("time")}
           />
         )}
 
-        {phase === 'login' && (
-          <StepLogin
-            key="login"
-            onNext={() => handleNext({})}
-            onBack={handleBack}
-          />
-        )}
+        {/* Login Step */}
+        {phase === "login" && <StepLogin key="login" onLogin={handleLogin} onBack={() => setPhase("location")} />}
 
-        {phase === 'awakening' && (
+        {/* Loading / Awakening */}
+        {phase === "awakening" && (
           <motion.div
             key="awakening"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex flex-col items-center space-y-6 z-10"
+            className="flex flex-col items-center justify-center min-h-screen space-y-8"
           >
-            <div className="relative">
-              <div className="absolute inset-0 bg-vedic-gold/20 blur-xl rounded-full animate-pulse" />
-              <Loader2 className="w-16 h-16 text-vedic-gold animate-spin relative z-10" />
-            </div>
-            <p className="text-xl text-vedic-gold font-serif animate-pulse">
-              {awakeningMessage}
-            </p>
+            <FloatingStars />
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+            >
+              <Loader2 className="w-16 h-16 text-[var(--color-lavender)]" />
+            </motion.div>
+            <motion.p
+              className="text-2xl text-[var(--color-muted)] font-light"
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+            >
+              Reading the stars...
+            </motion.p>
           </motion.div>
         )}
 
-        {phase === 'consultation' && (
-          <motion.div
-            key="consultation"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex w-full h-screen"
-          >
-            <PlanetarySidebar chartData={chartData} />
-            <div className="flex-1 h-full flex flex-col bg-vedic-blue/50 backdrop-blur-sm">
-              {/* 3D Chart View Toggle or Split View */}
-              <div className="flex-1 overflow-hidden">
-                <ChatInterface
-                  initialMessage={`I see you are a ${chartData?.ascendant?.sign || 'seeker'} Ascendant with a powerful Sun... What do you seek to know?`}
-                  userData={userData}
-                  chartData={chartData}
-                />
-              </div>
-            </div>
-          </motion.div>
-        )}
+        {/* Dashboard */}
+        {phase === "dashboard" && <DashboardLayout />}
       </AnimatePresence>
     </main>
-  );
+  )
 }
