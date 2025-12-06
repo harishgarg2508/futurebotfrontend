@@ -15,6 +15,11 @@ import { createAgent, AgentRequest, UserData, ChartData } from '@/lib/agent';
 
 export const maxDuration = 60;
 
+// [DEBUG] Trace Logger
+const trace = (step: string, msg: string, data?: any) => {
+  console.log(`\x1b[36m[TRACE] ${step}: ${msg}\x1b[0m`, data ? JSON.stringify(data, null, 2) : '');
+};
+
 /**
  * Validates the incoming request body
  */
@@ -52,6 +57,7 @@ function parseRequest(body: any): AgentRequest {
       lon: body.userData.location.lon,
     },
     timezone: body.userData.timezone,
+    language: body.userData.language || 'en',
   };
 
   const chartData: ChartData | undefined = body.chartData;
@@ -65,8 +71,11 @@ function parseRequest(body: any): AgentRequest {
 
 export async function POST(req: Request) {
   try {
+    trace('API_ENTRY', 'Received POST request to /api/chat');
+
     // 1. Parse request body
     const body = await req.json();
+    trace('API_PARSE', 'Request body parsed', { message: body.message, hasUserData: !!body.userData });
 
     // 2. Validate request
     const validation = validateRequest(body);

@@ -57,7 +57,7 @@ export const NorthIndianChart: React.FC<NorthIndianChartProps> = ({ planets, asc
                 y={y + i * 18}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                className="text-[14px] font-bold"
+                className="text-[20px] font-bold"
                 style={{ fill: color, filter: "drop-shadow(0 0 4px rgba(255,255,255,0.3))" }}
               >
                 {baseLabel}

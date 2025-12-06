@@ -24,8 +24,15 @@ export const dashaSchema = z.object({}).describe('No parameters needed - uses us
 
 export const birthChartSchema = z.object({}).describe('No parameters needed - uses user birth data automatically');
 
+// File Search schema - searches indexed astrology books
+export const fileSearchSchema = z.object({
+  query: z.string().describe('The search query to find relevant information from astrology books. Be specific and include astrological terms.'),
+  topic: z.string().optional().describe('Optional topic focus: remedies, predictions, yogas, doshas, etc.'),
+});
+
 export type TransitInput = z.infer<typeof transitSchema>;
 export type VargaInput = z.infer<typeof vargaSchema>;
 export type VarshaphalaInput = z.infer<typeof varshaphalaSchema>;
 export type DashaInput = z.infer<typeof dashaSchema>;
 export type BirthChartInput = z.infer<typeof birthChartSchema>;
+export type FileSearchInput = z.infer<typeof fileSearchSchema>;

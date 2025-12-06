@@ -51,6 +51,18 @@ Use this tool when the user asks about:
 - Basic chart interpretation
 - "What does my chart say?"
 Just call this tool directly without any parameters.`,
+
+  searchBooks: `Search indexed Vedic astrology books for detailed knowledge, remedies, and classical interpretations.
+Use this tool when the user asks about:
+- Remedies (upayas) for doshas or afflictions
+- Detailed yoga interpretations
+- Classical text references
+- Mantras and spiritual remedies
+- Traditional astrology concepts
+- "What do the texts say about..."
+- Historical or philosophical astrology questions
+- Detailed explanations of astrological principles
+Provide a specific, detailed query to get the most relevant results from the books.`,
 } as const;
 
 export type ToolDescriptionKey = keyof typeof TOOL_DESCRIPTIONS;

@@ -14,6 +14,11 @@ import { buildAgentGraph } from './graphBuilder';
 import { UserData, ChartData } from './types';
 import backendClient from '@/lib/backendClient';
 
+// [DEBUG] Trace Logger
+const trace = (step: string, msg: string, data?: any) => {
+  console.log(`\x1b[35m[AGENT_TRACE] ${step}: ${msg}\x1b[0m`, data ? JSON.stringify(data, null, 2) : '');
+};
+
 export interface AgentRequest {
   message: string;
   userData: UserData;
@@ -59,9 +64,11 @@ export class VedicAstrologyAgent {
 
     // Build system prompt with user context
     const systemPrompt = buildSystemPrompt(userData, recoveredChartData);
+    trace('PROMPT', 'System prompt built', { length: systemPrompt.length });
 
     // Build and compile the agent graph
     const agentGraph = buildAgentGraph(model, tools);
+    trace('GRAPH', 'Agent graph built, starting execution...');
 
     // Execute the agent
     const result = await agentGraph.invoke({
@@ -75,6 +82,7 @@ export class VedicAstrologyAgent {
 
     // Track which tools were used (for logging/analytics)
     const toolsUsed = this.extractToolsUsed(result.messages);
+    trace('COMPLETE', 'Agent execution finished', { toolsUsed, responseLength: response.length });
 
     return {
       response,

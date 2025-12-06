@@ -88,9 +88,9 @@ export const ChatInterface: React.FC = () => {
               name: currentProfile.location.city,
             },
             timezone: "Asia/Kolkata",
+            language: language,
           },
           chartData: useAppStore.getState().currentChartData,
-          language: language,
         }),
       })
 

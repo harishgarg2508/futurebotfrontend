@@ -80,7 +80,7 @@ export const PlanetarySummary: React.FC = () => {
                   <td className="py-3 px-4 text-sm text-slate-300/80">{data.sign}</td>
                   <td className="py-3 px-4 text-sm text-right font-mono text-amber-200/70">
                     {(() => {
-                      const deg = data.longitude ?? data.fullDegree ?? data.degree ?? data.normDegree ?? 0;
+                      const deg = data.degree ?? data.normDegree ?? 0;
                       return typeof deg === "number" ? deg.toFixed(2) : "0.00";
                     })()}°
                   </td>

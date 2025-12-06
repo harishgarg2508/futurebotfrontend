@@ -14,7 +14,8 @@ import {
   vargaSchema, 
   varshaphalaSchema, 
   dashaSchema,
-  birthChartSchema 
+  birthChartSchema,
+  fileSearchSchema,
 } from './schemas';
 import { TOOL_DESCRIPTIONS } from './toolDescriptions';
 import { 
@@ -24,7 +25,13 @@ import {
   dashaHandler,
   birthChartHandler 
 } from './handlers';
+import { fileSearchHandler } from './fileSearchHandler';
 import { UserData, ToolResult } from './types';
+
+// [DEBUG] Trace Logger
+const trace = (step: string, msg: string, data?: any) => {
+  console.log(`\x1b[33m[TOOL_TRACE] ${step}: ${msg}\x1b[0m`, data || '');
+};
 
 /**
  * Creates all tools with the given user context
@@ -37,6 +44,7 @@ export function createTools(userData: UserData): DynamicStructuredTool[] {
     createVarshapalaTool(userData),
     createDashaTool(userData),
     createBirthChartTool(userData),
+    createFileSearchTool(userData),
   ];
 }
 
@@ -146,10 +154,35 @@ function createBirthChartTool(userData: UserData): DynamicStructuredTool {
   });
 }
 
+/**
+ * Creates the File Search tool for querying indexed astrology books
+ */
+function createFileSearchTool(userData: UserData): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: 'searchBooks',
+    description: TOOL_DESCRIPTIONS.searchBooks,
+    schema: fileSearchSchema,
+    func: async ({ query, topic }) => {
+      trace('EXEC_START', 'searchBooks tool called', { query, topic });
+      const result: ToolResult = await fileSearchHandler.execute(
+        { query, topic },
+        userData
+      );
+      
+      trace('EXEC_END', 'searchBooks tool finished', { success: result.success });
+      if (result.success) {
+        return JSON.stringify(result.data);
+      }
+      return `Error searching books: ${result.error}. The knowledge base may not be available.`;
+    },
+  });
+}
+
 export { 
   createTransitTool, 
   createVargaTool, 
   createVarshapalaTool, 
   createDashaTool,
-  createBirthChartTool 
+  createBirthChartTool,
+  createFileSearchTool,
 };

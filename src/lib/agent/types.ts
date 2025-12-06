@@ -13,6 +13,7 @@ export interface UserData {
     lon: number;
   };
   timezone?: string;
+  language?: string; // 'en', 'hi', etc.
 }
 
 export interface ChartData {

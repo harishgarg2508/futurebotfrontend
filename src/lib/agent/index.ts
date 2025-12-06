@@ -36,6 +36,9 @@ export {
   birthChartHandler,
 } from './handlers';
 
+// File Search Handler
+export { FileSearchHandler, fileSearchHandler } from './fileSearchHandler';
+
 // Tool Factory
 export { 
   createTools,
@@ -44,6 +47,7 @@ export {
   createVarshapalaTool,
   createDashaTool,
   createBirthChartTool,
+  createFileSearchTool,
 } from './toolFactory';
 
 // Graph Builder
