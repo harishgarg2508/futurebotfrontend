@@ -31,7 +31,7 @@ export const DashboardLayout: React.FC = () => {
   }, [])
 
   return (
-    <div className="flex h-[100dvh] w-full overflow-hidden font-sans relative">
+    <div className="fixed inset-0 flex h-[100dvh] w-full overflow-hidden font-sans bg-[#0a0612]">
       {/* Background */}
       <div className="fixed inset-0 bg-gradient-to-br from-[#0a0612] via-[#0f0a1f] to-[#0d0918]">
         {/* Ambient glow orbs */}
