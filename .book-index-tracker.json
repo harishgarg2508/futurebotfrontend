@@ -1,13 +1,13 @@
 {
-  "storeName": "fileSearchStores/vedicastrologybooksstore-ogbr6ynwy52o",
-  "createdAt": "2025-12-06T18:31:40.638Z",
-  "updatedAt": "2025-12-06T18:32:25.718Z",
+  "storeName": "fileSearchStores/vedicastrologybooksstore-9wgzehj1gh1y",
+  "createdAt": "2025-12-07T03:11:59.170Z",
+  "updatedAt": "2025-12-07T03:12:48.543Z",
   "books": [
     {
       "fileName": "Jyotish_Lal Kitab_B.M. Gosvami.pdf",
       "filePath": "C:\\Users\\rishu\\OneDrive\\Desktop\\aiiiiiiiiiiiiiiiiiiiiii\\futurebot\\futurebotfrontend\\books\\Jyotish_Lal Kitab_B.M. Gosvami.pdf",
       "fileHash": "9460aa4f183ca012c6bdbb66b05452c5",
-      "indexedAt": "2025-12-06T18:32:25.716Z",
+      "indexedAt": "2025-12-07T03:12:48.542Z",
       "fileSize": 14955504
     }
   ]
