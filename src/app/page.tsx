@@ -13,6 +13,8 @@ import FloatingStars from "@/components/onboarding/FloatingStars"
 import { Sparkles, Loader2, LogIn } from "lucide-react"
 import { getBirthChart } from "@/services/api/birthChart"
 import { useAppStore } from "@/lib/store"
+import { ServicesGrid } from "@/components/services"
+import { useRouter } from "next/navigation"
 
 type Phase = "landing" | "name" | "date" | "time" | "location" | "login" | "awakening" | "dashboard"
 
@@ -96,6 +98,8 @@ export default function Home() {
     if (user && phase === "dashboard" && onboardData.name) {
     }
   }, [user, phase])
+  
+  const router = useRouter()
 
   return (
     <main className="min-h-screen text-[var(--color-light)] overflow-hidden relative selection:bg-[var(--color-lavender)] selection:text-white font-sans">
@@ -111,7 +115,7 @@ export default function Home() {
           >
             <FloatingStars />
 
-            <div className="relative z-10 flex flex-col items-center space-y-16">
+            <div className="relative z-10 flex flex-col items-center space-y-16 w-full max-w-7xl mx-auto px-4">
               {/* Logo */}
               <motion.div
                 className="relative"
@@ -148,9 +152,10 @@ export default function Home() {
               </div>
 
               {/* CTA Button */}
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="flex flex-col items-center gap-4">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="flex flex-col items-center gap-8 w-full">
                 {user ? (
-                  <motion.button
+                  <div className="flex flex-col items-center gap-8 w-full">
+                   <motion.button
                     onClick={() => setPhase("dashboard")}
                     className="px-12 py-5 rounded-full btn-celestial text-lg font-medium tracking-wide"
                     whileHover={{ scale: 1.05 }}
@@ -158,6 +163,21 @@ export default function Home() {
                   >
                     Enter Dashboard
                   </motion.button>
+                  
+                  <div className="w-full max-w-5xl">
+                    <ServicesGrid 
+                      title="Celestial Services" 
+                      onServiceClick={(service) => {
+                        // Open component or navigate
+                        if (service.component) {
+                             // Handle component logic if needed, for now console log or alert
+                             console.log("Component clicked:", service.component)
+                        }
+                        else if (service.href) router.push(service.href)
+                      }} 
+                    />
+                  </div>
+                  </div>
                 ) : (
                   <>
                     <motion.button

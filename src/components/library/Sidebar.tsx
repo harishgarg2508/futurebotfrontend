@@ -3,11 +3,13 @@
 import type React from "react"
 import { useState } from "react"
 import { useAppStore } from "@/lib/store"
-import { Plus, User, Trash2, LogOut, Sparkles, Calendar, Star, X } from "lucide-react"
+import { Plus, User, Trash2, LogOut, Sparkles, Calendar, Star, X, Home } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { removeProfileFromFirebase } from "@/services/firebaseService"
 import { useAuth } from "@/context/AuthContext"
 import { NewChartModal } from "./NewChartModal"
+import { ServicesButton } from "@/components/services"
+import { useRouter } from "next/navigation"
 
 interface SidebarProps {
   isCollapsed?: boolean
@@ -19,6 +21,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onToggle, onClose }) => {
   const { savedProfiles, currentProfile, setCurrentProfile } = useAppStore()
   const { user, logout } = useAuth()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const router = useRouter()
 
   const handleLogout = async () => {
     await logout()
@@ -148,6 +151,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onToggle, onClose }) => {
 
       {/* FOOTER */}
       <div className="p-4 border-t border-violet-500/10 space-y-3">
+        <ServicesButton 
+            variant="full" 
+            className="w-full"
+            onServiceClick={(service) => {
+                if (service.href) router.push(service.href)
+            }}
+        />
+
         <motion.button
           whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(139, 92, 246, 0.2)" }}
           whileTap={{ scale: 0.98 }}
@@ -157,16 +168,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ onToggle, onClose }) => {
           <Plus size={18} />
           <span>New Chart</span>
         </motion.button>
+        
+        <div className="flex gap-2">
+            <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => router.push('/')}
+            className="flex-1 flex items-center justify-center gap-2 py-3 text-violet-400/60 hover:text-violet-300 hover:bg-violet-500/5 rounded-xl transition-all"
+            >
+            <Home size={14} />
+            <span className="text-sm">Home</span>
+            </motion.button>
 
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 py-3 text-violet-400/60 hover:text-violet-300 hover:bg-violet-500/5 rounded-xl transition-all"
-        >
-          <LogOut size={14} />
-          <span className="text-sm">Sign Out</span>
-        </motion.button>
+            <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleLogout}
+            className="flex-1 flex items-center justify-center gap-2 py-3 text-violet-400/60 hover:text-violet-300 hover:bg-violet-500/5 rounded-xl transition-all"
+            >
+            <LogOut size={14} />
+            <span className="text-sm">Sign Out</span>
+            </motion.button>
+        </div>
       </div>
 
       {/* Modal */}
