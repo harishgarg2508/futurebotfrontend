@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import { useAppStore, type ChartProfile } from "@/lib/store"
-import { Plus, User, Trash2, LogOut, Sparkles, Calendar, Star, X, Home, Edit, Clock } from "lucide-react"
+import { Plus, User, Trash2, LogOut, Sparkles, Calendar, Star, X, Home, Edit, Clock, MoreVertical } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { removeProfileFromFirebase } from "@/services/firebaseService"
 import { useAuth } from "@/context/AuthContext"
@@ -22,6 +22,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onToggle, onClose }) => {
   const { user, logout } = useAuth()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [profileToEdit, setProfileToEdit] = useState<ChartProfile | undefined>(undefined)
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const router = useRouter()
 
   const handleLogout = async () => {
@@ -137,29 +138,63 @@ export const Sidebar: React.FC<SidebarProps> = ({ onToggle, onClose }) => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="relative">
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={(e) => {
                     e.stopPropagation()
-                    handleEdit(profile)
+                    setOpenMenuId(openMenuId === profile.id ? null : profile.id)
                   }}
-                  className="p-2 rounded-lg text-violet-400/60 hover:text-violet-300 hover:bg-violet-500/10 transition-all"
+                  className="p-2 text-violet-400/60 hover:text-violet-200 transition-colors"
                 >
-                  <Edit size={14} />
+                  <MoreVertical size={16} />
                 </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleDelete(profile.id)
-                  }}
-                  className="p-2 rounded-lg text-rose-400/60 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
-                >
-                  <Trash2 size={14} />
-                </motion.button>
+
+                <AnimatePresence>
+                  {openMenuId === profile.id && (
+                    <>
+                      {/* Backdrop to close menu when clicking outside */}
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setOpenMenuId(null)
+                        }}
+                      />
+                      
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                        className="absolute right-0 top-full mt-2 w-32 bg-gray-900 border border-violet-500/20 rounded-xl shadow-xl z-50 overflow-hidden"
+                      >
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEdit(profile)
+                            setOpenMenuId(null)
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-xs text-violet-200 hover:bg-violet-500/20 transition-colors text-left"
+                        >
+                          <Edit size={12} />
+                          Edit
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDelete(profile.id)
+                            setOpenMenuId(null)
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-300 hover:bg-rose-500/20 transition-colors text-left"
+                        >
+                          <Trash2 size={12} />
+                          Delete
+                        </button>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
               </div>
             </motion.div>
           ))}

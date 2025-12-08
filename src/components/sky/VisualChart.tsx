@@ -7,7 +7,11 @@ import { PlanetarySummary } from "./PlanetarySummary"
 import { motion } from "framer-motion"
 import { Sparkles, RotateCcw, Star } from "lucide-react"
 
+import { ServicesButton } from "@/components/services"
+import { useRouter } from "next/navigation"
+
 export const VisualChart: React.FC = () => {
+  const router = useRouter()
   const { currentChartData, currentProfile, setChartData } = useAppStore()
   const [error, setError] = React.useState<string | null>(null)
   const [loading, setLoading] = React.useState(false)
@@ -128,31 +132,35 @@ export const VisualChart: React.FC = () => {
               {currentProfile.name}
             </h2>
           </div>
-          <div className="text-right">
-            <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Ascendant</div>
-            <div className="text-lg font-semibold text-amber-200/90">{currentChartData.ascendant?.sign}</div>
+          <div className="text-right flex items-center gap-4">
+            <div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Ascendant</div>
+              <div className="text-lg font-semibold text-amber-200/90">{currentChartData.ascendant?.sign}</div>
+            </div>
+            <ServicesButton 
+              onServiceClick={(service: any) => {
+                if (service.href) router.push(service.href)
+              }}
+            />
           </div>
         </motion.div>
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          {/* Chart - Takes 2 cols on Large screens */}
-          <div className="lg:col-span-2 space-y-6">
+        {/* Content Grid */}
+        <div className="flex flex-col gap-8">
+          {/* Chart - Takes full width */}
+          <div className="w-full space-y-6">
             <div className="max-w-xl mx-auto lg:max-w-none">
               <NorthIndianChart
                 planets={currentChartData.planets}
                 ascendantSignId={currentChartData.ascendant.sign_id || 1}
               />
             </div>
-            
-            {/* Mobile-only hint or extra details could go here */}
           </div>
 
-          {/* Planetary Summary - Takes 1 col on Large screens (Right side) */}
-          <div className="lg:col-span-1">
-             <div className="sticky top-6">
+          {/* Planetary Summary - Takes full width below chart */}
+          <div className="w-full">
                <PlanetarySummary />
-             </div>
           </div>
         </div>
       </div>

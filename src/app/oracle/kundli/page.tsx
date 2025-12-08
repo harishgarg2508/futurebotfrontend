@@ -3,19 +3,23 @@
 import React, { useState } from "react"
 import { useAppStore, type ChartProfile } from "@/lib/store"
 import { motion, AnimatePresence } from "framer-motion"
-import { Plus, User, Calendar, MapPin, ArrowLeft, Sparkles, Edit, Clock } from "lucide-react"
+import { Plus, User, Calendar, MapPin, ArrowLeft, Sparkles, Edit, Clock, MoreVertical, Trash2 } from "lucide-react"
 import { NewChartModal } from "@/components/library/NewChartModal"
 import { VisualChart } from "@/components/sky/VisualChart"
 import { useRouter } from "next/navigation"
 
 import { useProfileSync } from "@/hooks/useProfileSync"
+import { useAuth } from "@/context/AuthContext"
+import { removeProfileFromFirebase } from "@/services/firebaseService"
 
 export default function KundliPage() {
   useProfileSync()
   const { savedProfiles, currentProfile, setCurrentProfile } = useAppStore()
+  const { user } = useAuth()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [profileToEdit, setProfileToEdit] = useState<ChartProfile | undefined>(undefined)
   const [view, setView] = useState<"list" | "detail">("list")
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const router = useRouter()
 
   const handleChartClick = (profile: any) => {
@@ -36,6 +40,10 @@ export default function KundliPage() {
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setProfileToEdit(undefined)
+  }
+
+  const handleDelete = async (id: string) => {
+    if (user) await removeProfileFromFirebase(user.uid, id)
   }
 
   return (
@@ -108,18 +116,59 @@ export default function KundliPage() {
                   onClick={() => handleChartClick(profile)}
                   className="group relative p-6 rounded-2xl bg-violet-900/10 border border-violet-500/10 hover:bg-violet-900/20 hover:border-violet-500/30 transition-all cursor-pointer overflow-hidden"
                 >
-                  <motion.div 
-                     className="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
-                     whileHover={{ scale: 1.1 }}
-                     whileTap={{ scale: 0.9 }}
-                  >
-                      <button
-                        onClick={(e) => handleEdit(profile, e)}
-                        className="p-2 bg-violet-500/20 hover:bg-violet-500/40 rounded-lg text-violet-300 transition-colors"
-                      >
-                          <Edit size={16} />
-                      </button>
-                  </motion.div>
+                  <div className="absolute top-4 right-4 z-20">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setOpenMenuId(openMenuId === profile.id ? null : profile.id)
+                      }}
+                      className="p-2 text-violet-400/60 hover:text-violet-200 transition-colors bg-violet-950/40 rounded-lg backdrop-blur-sm"
+                    >
+                      <MoreVertical size={16} />
+                    </button>
+
+                    <AnimatePresence>
+                      {openMenuId === profile.id && (
+                        <>
+                          <div 
+                            className="fixed inset-0 z-40" 
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setOpenMenuId(null)
+                            }}
+                          />
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                            className="absolute right-0 top-full mt-2 w-32 bg-gray-900 border border-violet-500/20 rounded-xl shadow-xl z-50 overflow-hidden"
+                          >
+                            <button
+                              onClick={(e) => {
+                                handleEdit(profile, e)
+                                setOpenMenuId(null)
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-violet-200 hover:bg-violet-500/20 transition-colors text-left"
+                            >
+                              <Edit size={12} />
+                              Edit
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDelete(profile.id)
+                                setOpenMenuId(null)
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-300 hover:bg-rose-500/20 transition-colors text-left"
+                            >
+                              <Trash2 size={12} />
+                              Delete
+                            </button>
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </div>
                   
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500/20 to-rose-500/20 flex items-center justify-center text-violet-300">
