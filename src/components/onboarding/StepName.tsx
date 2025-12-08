@@ -7,19 +7,20 @@ import { ArrowRight, Sparkles, LogIn } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 import FloatingStars from "./FloatingStars"
 interface StepNameProps {
-  onNext: (name: string) => void
+  onNext: (name: string, gender: 'male' | 'female') => void
   onDirectLogin?: () => void
 }
 
 const StepName: React.FC<StepNameProps> = ({ onNext, onDirectLogin }) => {
   const { signInWithGoogle } = useAuth()
   const [name, setName] = useState("")
+  const [gender, setGender] = useState<'male' | 'female' | null>(null)
   const [isFocused, setIsFocused] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (name.trim()) {
-      onNext(name)
+    if (name.trim() && gender) {
+      onNext(name, gender)
     }
   }
 
@@ -95,27 +96,47 @@ const StepName: React.FC<StepNameProps> = ({ onNext, onDirectLogin }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
           >
-            <div className="relative">
-              <motion.div
-                className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-[var(--color-lavender)] to-[var(--color-violet)] opacity-0 blur-xl transition-opacity duration-500"
-                animate={{ opacity: isFocused ? 0.3 : 0 }}
-              />
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                placeholder="Enter your name"
-                className="relative w-full px-6 py-5 text-xl text-center serene-input placeholder:text-[var(--color-dim)]"
-                autoFocus
-              />
+            <div className="space-y-6">
+              <div className="relative">
+                <motion.div
+                  className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-[var(--color-lavender)] to-[var(--color-violet)] opacity-0 blur-xl transition-opacity duration-500"
+                  animate={{ opacity: isFocused ? 0.3 : 0 }}
+                />
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  placeholder="Enter your name"
+                  className="relative w-full px-6 py-5 text-xl text-center serene-input placeholder:text-[var(--color-dim)]"
+                  autoFocus
+                />
+              </div>
+
+              {/* Gender Selection */}
+              <div className="flex gap-4 justify-center">
+                {['male', 'female'].map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => setGender(g as 'male' | 'female')}
+                    className={`px-6 py-3 rounded-xl border transition-all ${
+                      gender === g 
+                        ? 'bg-[var(--color-violet)] border-[var(--color-violet)] text-white' 
+                        : 'border-[var(--color-muted)]/30 text-[var(--color-muted)] hover:border-[var(--color-lavender)]'
+                    }`}
+                  >
+                    {g.charAt(0).toUpperCase() + g.slice(1)}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <motion.button
               type="submit"
-              disabled={!name.trim()}
-              className="w-full py-4 rounded-2xl btn-celestial text-lg font-medium flex items-center justify-center gap-3"
+              disabled={!name.trim() || !gender}
+              className="w-full py-4 rounded-2xl btn-celestial text-lg font-medium flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >

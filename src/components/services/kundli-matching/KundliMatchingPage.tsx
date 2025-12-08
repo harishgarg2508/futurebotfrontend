@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useAppStore, type ChartProfile } from "@/lib/store"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -17,8 +17,13 @@ import {
   Clock,
   Search,
   RotateCcw,
+  ArrowLeft,
 } from "lucide-react"
 import axios from "axios"
+import { useRouter } from "next/navigation"
+import { useDispatch, useSelector } from "react-redux"
+import { fetchMatchMaking, clearMatchResult } from "@/redux/slices/matchSlice"
+import type { RootState, AppDispatch } from "@/redux/store"
 
 // Mini North Indian Chart for display
 const MiniChart: React.FC<{ planets: Record<string, any>; ascendantSignId: number; label: string }> = ({
@@ -51,16 +56,19 @@ const MiniChart: React.FC<{ planets: Record<string, any>; ascendantSignId: numbe
 
   const renderPlanets = (houseNum: number, x: number, y: number) => {
     const list = housePlanets[houseNum] || []
+    // Center the group vertically based on number of planets
+    const startY = y - ((list.length - 1) * 8) / 2
+    
     return list.map((p, i) => {
       const base = p.replace("ᴿ", "")
       return (
         <text
           key={p}
           x={x}
-          y={y + i * 11}
+          y={startY + i * 8}
           textAnchor="middle"
           dominantBaseline="middle"
-          className="text-[8px] font-bold"
+          className="text-[7px] font-bold"
           style={{ fill: planetColors[base] || "#C4B5FD" }}
         >
           {p}
@@ -68,6 +76,9 @@ const MiniChart: React.FC<{ planets: Record<string, any>; ascendantSignId: numbe
       )
     })
   }
+
+  // Sanitize label for ID
+  const safeLabel = label.replace(/[^a-zA-Z0-9]/g, "")
 
   return (
     <div className="relative">
@@ -77,30 +88,43 @@ const MiniChart: React.FC<{ planets: Record<string, any>; ascendantSignId: numbe
       <div className="w-32 h-32 rounded-xl bg-gradient-to-br from-slate-900/90 via-violet-950/70 to-slate-900/90 border border-violet-400/20 p-2">
         <svg viewBox="0 0 100 100" className="w-full h-full">
           <defs>
-            <linearGradient id={`line-${label}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id={`line-${safeLabel}`} x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#C4B5FD" stopOpacity="0.5" />
               <stop offset="100%" stopColor="#F9A8D4" stopOpacity="0.3" />
             </linearGradient>
           </defs>
-          <rect x="2" y="2" width="96" height="96" fill="none" stroke={`url(#line-${label})`} strokeWidth="1" rx="2" />
-          <line x1="2" y1="2" x2="98" y2="98" stroke={`url(#line-${label})`} strokeWidth="0.8" />
-          <line x1="98" y1="2" x2="2" y2="98" stroke={`url(#line-${label})`} strokeWidth="0.8" />
-          <line x1="50" y1="2" x2="2" y2="50" stroke={`url(#line-${label})`} strokeWidth="0.8" />
-          <line x1="2" y1="50" x2="50" y2="98" stroke={`url(#line-${label})`} strokeWidth="0.8" />
-          <line x1="50" y1="98" x2="98" y2="50" stroke={`url(#line-${label})`} strokeWidth="0.8" />
-          <line x1="98" y1="50" x2="50" y2="2" stroke={`url(#line-${label})`} strokeWidth="0.8" />
-          {renderPlanets(1, 50, 20)}
-          {renderPlanets(2, 25, 12)}
-          {renderPlanets(3, 12, 25)}
+          <rect x="2" y="2" width="96" height="96" fill="none" stroke={`url(#line-${safeLabel})`} strokeWidth="1" rx="2" />
+          <line x1="2" y1="2" x2="98" y2="98" stroke={`url(#line-${safeLabel})`} strokeWidth="0.8" />
+          <line x1="98" y1="2" x2="2" y2="98" stroke={`url(#line-${safeLabel})`} strokeWidth="0.8" />
+          <line x1="50" y1="2" x2="2" y2="50" stroke={`url(#line-${safeLabel})`} strokeWidth="0.8" />
+          <line x1="2" y1="50" x2="50" y2="98" stroke={`url(#line-${safeLabel})`} strokeWidth="0.8" />
+          <line x1="50" y1="98" x2="98" y2="50" stroke={`url(#line-${safeLabel})`} strokeWidth="0.8" />
+          <line x1="98" y1="50" x2="50" y2="2" stroke={`url(#line-${safeLabel})`} strokeWidth="0.8" />
+          
+          {/* House 1 (Top Diamond) */}
+          {renderPlanets(1, 50, 25)}
+          {/* House 2 (Top Left) */}
+          {renderPlanets(2, 25, 15)}
+          {/* House 3 (Left Top) */}
+          {renderPlanets(3, 15, 25)}
+          {/* House 4 (Left Diamond) */}
           {renderPlanets(4, 25, 50)}
-          {renderPlanets(5, 12, 75)}
-          {renderPlanets(6, 25, 88)}
-          {renderPlanets(7, 50, 80)}
-          {renderPlanets(8, 75, 88)}
-          {renderPlanets(9, 88, 75)}
+          {/* House 5 (Left Bottom) */}
+          {renderPlanets(5, 15, 75)}
+          {/* House 6 (Bottom Left) */}
+          {renderPlanets(6, 25, 85)}
+          {/* House 7 (Bottom Diamond) */}
+          {renderPlanets(7, 50, 75)}
+          {/* House 8 (Bottom Right) */}
+          {renderPlanets(8, 75, 85)}
+          {/* House 9 (Right Bottom) */}
+          {renderPlanets(9, 85, 75)}
+          {/* House 10 (Right Diamond) */}
           {renderPlanets(10, 75, 50)}
-          {renderPlanets(11, 88, 25)}
-          {renderPlanets(12, 75, 12)}
+          {/* House 11 (Right Top) */}
+          {renderPlanets(11, 85, 25)}
+          {/* House 12 (Top Right) */}
+          {renderPlanets(12, 75, 15)}
         </svg>
       </div>
     </div>
@@ -130,6 +154,18 @@ const BirthDataForm: React.FC<{
   const [locQuery, setLocQuery] = useState("")
   const [locResults, setLocResults] = useState<any[]>([])
   const [loadingLoc, setLoadingLoc] = useState(false)
+  const [debouncedQuery, setDebouncedQuery] = useState("")
+
+  // Debounce effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (locQuery.length >= 3) {
+        searchLocation(locQuery)
+      }
+    }, 500) // 500ms debounce
+
+    return () => clearTimeout(timer)
+  }, [locQuery])
 
   const months = [
     { value: "01", label: "Jan" },
@@ -167,7 +203,7 @@ const BirthDataForm: React.FC<{
           <h3 className="text-sm font-medium text-slate-200">{label}</h3>
           <p className="text-[10px] text-slate-400">Birth details</p>
         </div>
-        {savedCharts.length  0 && (
+        {savedCharts.length > 0 && (
           <button
             onClick={() => setShowSaved(!showSaved)}
             className="ml-auto text-[10px] px-3 py-1.5 rounded-lg bg-violet-500/10 border border-violet-400/20 text-violet-300 hover:bg-violet-500/20 transition-colors flex items-center gap-1"
@@ -282,7 +318,7 @@ const BirthDataForm: React.FC<{
             value={locQuery}
             onChange={(e) => {
               setLocQuery(e.target.value)
-              if (e.target.value.length >= 3) searchLocation(e.target.value)
+              // Search triggered by effect
             }}
             className="w-full pl-9 pr-4 py-2.5 bg-slate-900/50 border border-slate-700/50 rounded-xl text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-violet-400/40 transition-colors"
           />
@@ -358,7 +394,11 @@ interface GunaResult {
 
 // Main Kundli Matching Page
 export const KundliMatchingPage: React.FC = () => {
-  const { profiles } = useAppStore()
+  const { savedProfiles: profiles } = useAppStore()
+  const router = useRouter()
+
+  const dispatch = useDispatch<AppDispatch>()
+  const { result: matchResult, loading: matchLoading, error: matchError } = useSelector((state: RootState) => state.match)
 
   const [maleData, setMaleData] = useState<BirthFormData>({
     name: "",
@@ -379,9 +419,9 @@ export const KundliMatchingPage: React.FC = () => {
 
   const [maleChart, setMaleChart] = useState<any>(null)
   const [femaleChart, setFemaleChart] = useState<any>(null)
-  const [loading, setLoading] = useState(false)
-  const [results, setResults] = useState<GunaResult[] | null>(null)
-  const [totalScore, setTotalScore] = useState(0)
+  // const [loading, setLoading] = useState(false) // Use Redux loading
+  // const [results, setResults] = useState<GunaResult[] | null>(null) // Derived from Redux
+  // const [totalScore, setTotalScore] = useState(0) // Derived from Redux
 
   const handleSelectSaved = (chart: ChartProfile, isMale: boolean) => {
     const dateParts = chart.date.split("-")
@@ -407,8 +447,9 @@ export const KundliMatchingPage: React.FC = () => {
       return
     }
 
-    setLoading(true)
-    setResults(null)
+    // setLoading(true)
+    // setResults(null)
+    dispatch(clearMatchResult())
 
     try {
       const { getBirthChart } = await import("@/services/api/birthChart")
@@ -431,41 +472,19 @@ export const KundliMatchingPage: React.FC = () => {
       setMaleChart(mChart)
       setFemaleChart(fChart)
 
-      // Calculate Guna Milan (simplified - you can integrate actual API)
-      const gunaResults: GunaResult[] = [
-        { name: "Varna", maxScore: 1, score: Math.random() > 0.3 ? 1 : 0, description: "Spiritual compatibility" },
-        {
-          name: "Vashya",
-          maxScore: 2,
-          score: Math.floor(Math.random() * 3),
-          description: "Mutual attraction & control",
-        },
-        { name: "Tara", maxScore: 3, score: Math.floor(Math.random() * 4), description: "Birth star compatibility" },
-        {
-          name: "Yoni",
-          maxScore: 4,
-          score: Math.floor(Math.random() * 5),
-          description: "Physical & sexual compatibility",
-        },
-        {
-          name: "Graha Maitri",
-          maxScore: 5,
-          score: Math.floor(Math.random() * 6),
-          description: "Mental compatibility",
-        },
-        { name: "Gana", maxScore: 6, score: Math.floor(Math.random() * 7), description: "Temperament match" },
-        { name: "Bhakoot", maxScore: 7, score: Math.floor(Math.random() * 8), description: "Love & family life" },
-        { name: "Nadi", maxScore: 8, score: Math.floor(Math.random() * 9), description: "Health & genes" },
-      ]
+      // Dispatch Redux Action
+      await dispatch(fetchMatchMaking({
+        boy_date: `${maleData.year}-${maleData.month}-${maleData.day.padStart(2, "0")}`,
+        boy_time: maleData.time,
+        girl_date: `${femaleData.year}-${femaleData.month}-${femaleData.day.padStart(2, "0")}`,
+        girl_time: femaleData.time,
+      })).unwrap()
 
-      const total = gunaResults.reduce((acc, g) => acc + g.score, 0)
-      setResults(gunaResults)
-      setTotalScore(total)
     } catch (err) {
       console.error(err)
       alert("Failed to calculate. Please try again.")
     } finally {
-      setLoading(false)
+      // setLoading(false)
     }
   }
 
@@ -474,9 +493,22 @@ export const KundliMatchingPage: React.FC = () => {
     setFemaleData({ name: "", day: "", month: "", year: "", time: "", location: null })
     setMaleChart(null)
     setFemaleChart(null)
-    setResults(null)
-    setTotalScore(0)
+    dispatch(clearMatchResult())
   }
+
+  // Derive results from Redux state
+  const results: GunaResult[] | null = matchResult ? [
+    { name: "Varna", maxScore: 1, score: matchResult.details.varna, description: "Spiritual compatibility" },
+    { name: "Vashya", maxScore: 2, score: matchResult.details.vashya, description: "Mutual attraction & control" },
+    { name: "Tara", maxScore: 3, score: matchResult.details.tara, description: "Birth star compatibility" },
+    { name: "Yoni", maxScore: 4, score: matchResult.details.yoni, description: "Physical & sexual compatibility" },
+    { name: "Graha Maitri", maxScore: 5, score: matchResult.details.graha_maitri, description: "Mental compatibility" },
+    { name: "Gana", maxScore: 6, score: matchResult.details.gana, description: "Temperament match" },
+    { name: "Bhakoot", maxScore: 7, score: matchResult.details.bhakoot, description: matchResult.bhakoot_reason || "Love & family life" },
+    { name: "Nadi", maxScore: 8, score: matchResult.details.nadi, description: "Health & genes" },
+  ] : null
+
+  const totalScore = matchResult ? matchResult.total_score : 0
 
   const getCompatibilityLevel = (score: number) => {
     if (score >= 28) return { label: "Excellent", color: "emerald", emoji: "💫" }
@@ -496,7 +528,23 @@ export const KundliMatchingPage: React.FC = () => {
 
       <div className="relative z-10 max-w-5xl mx-auto space-y-6">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-2">
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-2 relative">
+          <button
+            onClick={() => {
+              if (maleChart && femaleChart) {
+                setMaleChart(null)
+                setFemaleChart(null)
+                dispatch(clearMatchResult())
+              } else {
+                router.push("/")
+              }
+            }}
+            className="absolute left-0 top-1/2 -translate-y-1/2 p-2 px-4 bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 rounded-xl text-violet-300 hover:text-violet-100 transition-all flex items-center gap-2 group"
+          >
+            <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+            <span className="hidden md:inline text-sm font-medium">Go Back</span>
+          </button>
+          
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-500/10 border border-rose-400/20 text-rose-300 text-xs font-medium">
             <Heart size={12} className="animate-pulse" />
             Kundli Matching
@@ -597,13 +645,13 @@ export const KundliMatchingPage: React.FC = () => {
 
               <motion.button
                 onClick={calculateMatch}
-                disabled={loading || !isFormValid(maleData) || !isFormValid(femaleData)}
+                disabled={matchLoading || !isFormValid(maleData) || !isFormValid(femaleData)}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full mt-6 py-3.5 bg-gradient-to-r from-violet-500 via-rose-500 to-violet-500 bg-[length:200%_100%] text-white font-medium rounded-xl shadow-lg shadow-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 hover:bg-right"
-                style={{ backgroundPosition: loading ? "right" : "left" }}
+                style={{ backgroundPosition: matchLoading ? "right" : "left" }}
               >
-                {loading ? (
+                {matchLoading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Calculating Compatibility...

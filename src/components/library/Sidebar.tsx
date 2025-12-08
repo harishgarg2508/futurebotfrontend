@@ -23,6 +23,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onToggle, onClose }) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const router = useRouter()
 
+  // Ensure profiles are loaded (though usually handled by DashboardLayout)
+  // If "card" refers to the profile item, it's already rendered in the map.
+  // If "card" refers to a specific "Current Profile" card at the top, it might be missing.
+  // But based on the code, the list IS the cards.
+
   const handleLogout = async () => {
     await logout()
     window.location.reload()
@@ -73,7 +78,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onToggle, onClose }) => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ delay: index * 0.05 }}
-              onClick={() => setCurrentProfile(profile)}
+              onClick={() => {
+                setCurrentProfile(profile)
+                if (onClose) onClose()
+              }}
               className={`
                 group flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all duration-300 border
                 ${
@@ -173,7 +181,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onToggle, onClose }) => {
             <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => router.push('/')}
+            onClick={() => window.location.href = '/'}
             className="flex-1 flex items-center justify-center gap-2 py-3 text-violet-400/60 hover:text-violet-300 hover:bg-violet-500/5 rounded-xl transition-all"
             >
             <Home size={14} />

@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+import { Provider } from "react-redux";
+import { store } from "@/redux/store";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,10 +28,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          {children}
-          <InstallPrompt />
-        </AuthProvider>
+        <Provider store={store}>
+          <AuthProvider>
+            {children}
+            <InstallPrompt />
+          </AuthProvider>
+        </Provider>
       </body>
     </html>
   );

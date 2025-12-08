@@ -9,6 +9,10 @@ export function InstallPrompt() {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
+    // Check if already dismissed
+    const isDismissed = localStorage.getItem("pwa-install-dismissed")
+    if (isDismissed) return
+
     const handler = (e: any) => {
       e.preventDefault()
       setDeferredPrompt(e)
@@ -36,6 +40,7 @@ export function InstallPrompt() {
 
   const handleDismiss = () => {
     setIsVisible(false)
+    localStorage.setItem("pwa-install-dismissed", "true")
   }
 
   return (

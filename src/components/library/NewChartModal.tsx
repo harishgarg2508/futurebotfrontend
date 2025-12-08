@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAppStore, type ChartProfile } from "@/lib/store"
 import { X, Calendar, MapPin, Search, Sparkles, User, Clock } from "lucide-react"
 import { addProfileToFirebase } from "@/services/firebaseService"
@@ -18,6 +18,7 @@ export const NewChartModal: React.FC<NewChartModalProps> = ({ onClose }) => {
   const { user } = useAuth()
 
   const [name, setName] = useState("")
+  const [gender, setGender] = useState<'male' | 'female'>("male")
   const [day, setDay] = useState("")
   const [month, setMonth] = useState("")
   const [year, setYear] = useState("")
@@ -42,8 +43,19 @@ export const NewChartModal: React.FC<NewChartModalProps> = ({ onClose }) => {
     { value: "12", label: "Dec" },
   ]
 
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (locQuery.length >= 3) {
+        searchLocation(locQuery)
+      } else {
+        setLocResults([])
+      }
+    }, 500)
+
+    return () => clearTimeout(delayDebounceFn)
+  }, [locQuery])
+
   const searchLocation = async (q: string) => {
-    if (q.length < 3) return
     setLoadingLoc(true)
     try {
       const res = await axios.get(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}`, {
@@ -69,6 +81,7 @@ export const NewChartModal: React.FC<NewChartModalProps> = ({ onClose }) => {
     const newProfile: ChartProfile = {
       id: crypto.randomUUID(),
       name: name,
+      gender: gender,
       date: finalDate,
       time: time,
       location: {
@@ -224,6 +237,30 @@ export const NewChartModal: React.FC<NewChartModalProps> = ({ onClose }) => {
                 </div>
               </div>
 
+              {/* Gender */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-xs font-medium text-violet-300/80 uppercase tracking-wider">
+                  <User size={12} />
+                  Gender
+                </label>
+                <div className="flex gap-3">
+                  {['male', 'female'].map((g) => (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => setGender(g as 'male' | 'female')}
+                      className={`flex-1 p-3 rounded-xl border transition-all text-sm font-medium ${
+                        gender === g
+                          ? 'bg-violet-500/20 border-violet-500/40 text-violet-100'
+                          : 'bg-violet-950/40 border-violet-500/20 text-violet-400/60 hover:border-violet-500/40'
+                      }`}
+                    >
+                      {g.charAt(0).toUpperCase() + g.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Time */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-xs font-medium text-violet-300/80 uppercase tracking-wider">
@@ -254,7 +291,6 @@ export const NewChartModal: React.FC<NewChartModalProps> = ({ onClose }) => {
                     value={locQuery}
                     onChange={(e) => {
                       setLocQuery(e.target.value)
-                      if (e.target.value.length >= 3) searchLocation(e.target.value)
                     }}
                     className="w-full p-4 pl-11 bg-violet-950/40 border border-violet-500/20 rounded-2xl text-violet-100 placeholder-violet-400/40 focus:outline-none focus:border-violet-400/40 transition-all"
                   />

@@ -18,6 +18,7 @@ export interface PlanetPosition {
 export interface ChartProfile {
   id: string;
   name: string;
+  gender?: 'male' | 'female';
   date: string;
   time: string;
   location: {

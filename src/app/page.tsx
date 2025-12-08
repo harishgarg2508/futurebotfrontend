@@ -19,12 +19,21 @@ import { useRouter } from "next/navigation"
 type Phase = "landing" | "name" | "date" | "time" | "location" | "login" | "awakening" | "dashboard"
 
 export default function Home() {
-  const { user, signInWithGoogle } = useAuth()
+  const { user, signInWithGoogle, loading } = useAuth()
   const { setCurrentProfile, setChartData } = useAppStore()
   const [phase, setPhase] = useState<Phase>("landing")
 
-  const [onboardData, setOnboardData] = useState({
+  const [onboardData, setOnboardData] = useState<{
+    name: string
+    gender: "male" | "female"
+    date: string
+    time: string
+    lat: number
+    lon: number
+    city: string
+  }>({
     name: "",
+    gender: "male", // Default
     date: "",
     time: "",
     lat: 0,
@@ -40,26 +49,6 @@ export default function Home() {
     else if (phase === "location") setPhase("login")
   }
 
-  const handleLogin = async () => {
-    try {
-      await signInWithGoogle()
-      setPhase("awakening")
-      fetchInitialChart(onboardData)
-    } catch (err) {
-      console.error("Login failed", err)
-    }
-  }
-
-  // Direct login for existing users - goes straight to dashboard
-  const handleDirectLogin = async () => {
-    try {
-      await signInWithGoogle()
-      setPhase("dashboard")
-    } catch (err) {
-      console.error("Login failed", err)
-    }
-  }
-
   const fetchInitialChart = async (finalData: typeof onboardData) => {
     try {
       const chart = await getBirthChart({
@@ -72,6 +61,7 @@ export default function Home() {
       const newProfile = {
         id: crypto.randomUUID(),
         name: finalData.name,
+        gender: finalData.gender,
         date: finalData.date,
         time: finalData.time,
         location: {
@@ -95,11 +85,41 @@ export default function Home() {
   }
 
   useEffect(() => {
-    if (user && phase === "dashboard" && onboardData.name) {
+    if (user && phase === "awakening" && onboardData.name) {
+      // User just logged in from onboarding
+      fetchInitialChart(onboardData)
     }
-  }, [user, phase])
+  }, [user, phase, onboardData])
+
+  const handleLogin = async () => {
+    try {
+      await signInWithGoogle()
+      setPhase("awakening")
+      // fetchInitialChart is now triggered by the useEffect when user becomes available
+    } catch (err) {
+      console.error("Login failed", err)
+    }
+  }
+
+  // Direct login for existing users - goes straight to dashboard
+  const handleDirectLogin = async () => {
+    try {
+      await signInWithGoogle()
+      setPhase("dashboard")
+    } catch (err) {
+      console.error("Login failed", err)
+    }
+  }
   
   const router = useRouter()
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#0a0612]">
+        <Loader2 className="w-10 h-10 text-[var(--color-lavender)] animate-spin" />
+      </div>
+    )
+  }
 
   return (
     <main className="min-h-screen text-[var(--color-light)] overflow-hidden relative selection:bg-[var(--color-lavender)] selection:text-white font-sans">
@@ -211,7 +231,7 @@ export default function Home() {
         )}
 
         {/* Onboarding Steps */}
-        {phase === "name" && <StepName key="name" onNext={(name) => handleNext({ name })} onDirectLogin={() => setPhase("dashboard")} />}
+        {phase === "name" && <StepName key="name" onNext={(name, gender) => handleNext({ name, gender })} onDirectLogin={() => setPhase("dashboard")} />}
 
         {phase === "date" && (
           <StepDate
