@@ -2,8 +2,8 @@
 
 import type React from "react"
 import { useState } from "react"
-import { useAppStore } from "@/lib/store"
-import { Plus, User, Trash2, LogOut, Sparkles, Calendar, Star, X, Home } from "lucide-react"
+import { useAppStore, type ChartProfile } from "@/lib/store"
+import { Plus, User, Trash2, LogOut, Sparkles, Calendar, Star, X, Home, Edit, Clock } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { removeProfileFromFirebase } from "@/services/firebaseService"
 import { useAuth } from "@/context/AuthContext"
@@ -21,12 +21,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onToggle, onClose }) => {
   const { savedProfiles, currentProfile, setCurrentProfile } = useAppStore()
   const { user, logout } = useAuth()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [profileToEdit, setProfileToEdit] = useState<ChartProfile | undefined>(undefined)
   const router = useRouter()
-
-  // Ensure profiles are loaded (though usually handled by DashboardLayout)
-  // If "card" refers to the profile item, it's already rendered in the map.
-  // If "card" refers to a specific "Current Profile" card at the top, it might be missing.
-  // But based on the code, the list IS the cards.
 
   const handleLogout = async () => {
     await logout()
@@ -35,6 +31,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ onToggle, onClose }) => {
 
   const handleDelete = async (id: string) => {
     if (user) await removeProfileFromFirebase(user.uid, id)
+  }
+
+  const handleEdit = (profile: ChartProfile) => {
+    setProfileToEdit(profile)
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setProfileToEdit(undefined)
   }
 
   return (
@@ -91,7 +97,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onToggle, onClose }) => {
                 }
               `}
             >
-              <div className="flex items-center gap-3 min-w-0">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
                 <motion.div
                   whileHover={{ scale: 1.1 }}
                   className={`
@@ -115,30 +121,46 @@ export const Sidebar: React.FC<SidebarProps> = ({ onToggle, onClose }) => {
                   >
                     {profile.name}
                   </h3>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <Calendar size={10} className="text-violet-400/40" />
-                    <p
-                      className={`text-[10px] ${
-                        currentProfile?.id === profile.id ? "text-violet-300/70" : "text-violet-400/50"
-                      }`}
-                    >
-                      {profile.date}
-                    </p>
+                   <div className="flex items-center gap-3 text-xs mt-1">
+                      <div className="flex items-center gap-1 text-violet-400/60">
+                        <Calendar size={10} />
+                        <span>{profile.date}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-violet-400/60">
+                         <Clock size={10} />
+                         <span>{profile.time}</span>
+                      </div>
+                  </div>
+                  <div className="flex items-center gap-1 mt-0.5 text-[10px] text-violet-400/40 uppercase tracking-wider">
+                     <span>{profile.gender || "Unknown"}</span>
                   </div>
                 </div>
               </div>
 
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleDelete(profile.id)
-                }}
-                className="opacity-0 group-hover:opacity-100 p-2 rounded-lg text-rose-400/60 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
-              >
-                <Trash2 size={14} />
-              </motion.button>
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleEdit(profile)
+                  }}
+                  className="p-2 rounded-lg text-violet-400/60 hover:text-violet-300 hover:bg-violet-500/10 transition-all"
+                >
+                  <Edit size={14} />
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDelete(profile.id)
+                  }}
+                  className="p-2 rounded-lg text-rose-400/60 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+                >
+                  <Trash2 size={14} />
+                </motion.button>
+              </div>
             </motion.div>
           ))}
         </AnimatePresence>
@@ -201,7 +223,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onToggle, onClose }) => {
       </div>
 
       {/* Modal */}
-      <AnimatePresence>{isModalOpen && <NewChartModal onClose={() => setIsModalOpen(false)} />}</AnimatePresence>
+      <AnimatePresence>{isModalOpen && <NewChartModal onClose={handleCloseModal} initialProfile={profileToEdit} />}</AnimatePresence>
     </aside>
   )
 }

@@ -10,7 +10,7 @@ import { Plus, User, Sparkles, Star, Calendar, MapPin } from "lucide-react"
 
 interface ChartListProps {
   onSelectChart: (chart: any) => void
-  onNewChart: () => void
+  onNewChart: (chart?: any) => void
 }
 
 const ChartList: React.FC<ChartListProps> = ({ onSelectChart, onNewChart }) => {
@@ -22,7 +22,7 @@ const ChartList: React.FC<ChartListProps> = ({ onSelectChart, onNewChart }) => {
     const fetchCharts = async () => {
       if (!user) return
       try {
-        const querySnapshot = await getDocs(collection(db, "users", user.uid, "charts"))
+        const querySnapshot = await getDocs(collection(db, "users", user.uid, "profiles"))
         const chartsData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
         setCharts(chartsData)
       } catch (error) {
@@ -109,15 +109,32 @@ const ChartList: React.FC<ChartListProps> = ({ onSelectChart, onNewChart }) => {
                     <span className="text-violet-500/30">•</span>
                     <span>{chart.time}</span>
                   </div>
+                  {chart.gender && (
+                     <div className="flex items-center gap-2 mt-1 text-xs text-violet-400/50 uppercase tracking-widest">
+                       <span>{chart.gender}</span>
+                     </div>
+                  )}
                 </div>
               </div>
 
               {chart.location?.name && (
-                <div className="flex items-center gap-2 text-xs text-violet-400/50 uppercase tracking-widest">
+                <div className="flex items-center gap-2 text-xs text-violet-400/50 uppercase tracking-widest mb-3">
                   <MapPin size={10} />
                   <span className="truncate">{chart.location.name}</span>
                 </div>
               )}
+              
+               <div className="flex gap-2 mt-2">
+                 <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onNewChart(chart) // Pass chart as initialProfile for editing
+                    }}
+                    className="flex-1 py-2 bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 rounded-lg text-xs font-medium text-violet-300 transition-colors"
+                  >
+                    Edit Details
+                  </button>
+               </div>
 
               {/* Decorative stars */}
               <motion.div

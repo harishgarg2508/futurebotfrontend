@@ -156,43 +156,34 @@ export const NorthIndianChart: React.FC<NorthIndianChartProps> = ({ planets, asc
           </g>
 
           {/* House Numbers - Soft and subtle */}
+          {/* House Numbers - Dynamic Sign Numbers */}
           <g className="font-light" style={{ fill: "rgba(196, 181, 253, 0.4)" }}>
-            <text x="200" y="145" className="text-[9px]" textAnchor="middle">
-              1
-            </text>
-            <text x="55" y="55" className="text-[9px]" textAnchor="middle">
-              2
-            </text>
-            <text x="55" y="200" className="text-[9px]" textAnchor="middle">
-              3
-            </text>
-            <text x="145" y="200" className="text-[9px]" textAnchor="middle">
-              4
-            </text>
-            <text x="55" y="345" className="text-[9px]" textAnchor="middle">
-              5
-            </text>
-            <text x="145" y="345" className="text-[9px]" textAnchor="middle">
-              6
-            </text>
-            <text x="200" y="260" className="text-[9px]" textAnchor="middle">
-              7
-            </text>
-            <text x="345" y="345" className="text-[9px]" textAnchor="middle">
-              8
-            </text>
-            <text x="255" y="345" className="text-[9px]" textAnchor="middle">
-              9
-            </text>
-            <text x="255" y="200" className="text-[9px]" textAnchor="middle">
-              10
-            </text>
-            <text x="345" y="200" className="text-[9px]" textAnchor="middle">
-              11
-            </text>
-            <text x="345" y="55" className="text-[9px]" textAnchor="middle">
-              12
-            </text>
+            {[
+              { house: 1, x: 200, y: 145 },
+              { house: 2, x: 55, y: 55 },
+              { house: 3, x: 55, y: 200 },
+              { house: 4, x: 145, y: 200 },
+              { house: 5, x: 55, y: 345 },
+              { house: 6, x: 145, y: 345 },
+              { house: 7, x: 200, y: 260 },
+              { house: 8, x: 345, y: 345 },
+              { house: 9, x: 255, y: 345 },
+              { house: 10, x: 255, y: 200 },
+              { house: 11, x: 345, y: 200 },
+              { house: 12, x: 345, y: 55 },
+            ].map(({ house, x, y }) => {
+              // Calculate Sign Number relative to Ascendant
+              // House 1 has Ascendant Sign
+              // Sign = ((Ascendant + House - 1) - 1) % 12 + 1
+              // Simplified: (Ascendant + House - 2) % 12 + 1
+              // Note: ascendantSignId is 1-based (Aries=1)
+              const signNum = ((ascendantSignId + house - 2) % 12) + 1;
+              return (
+                <text key={house} x={x} y={y} className="text-[9px]" textAnchor="middle">
+                  {signNum}
+                </text>
+              )
+            })}
           </g>
 
           {/* Center decoration */}

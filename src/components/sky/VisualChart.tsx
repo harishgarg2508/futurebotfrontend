@@ -134,16 +134,27 @@ export const VisualChart: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Chart */}
-        <div className="max-w-md mx-auto">
-          <NorthIndianChart
-            planets={currentChartData.planets}
-            ascendantSignId={currentChartData.ascendant.sign_id || 1}
-          />
-        </div>
+        {/* Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          {/* Chart - Takes 2 cols on Large screens */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="max-w-xl mx-auto lg:max-w-none">
+              <NorthIndianChart
+                planets={currentChartData.planets}
+                ascendantSignId={currentChartData.ascendant.sign_id || 1}
+              />
+            </div>
+            
+            {/* Mobile-only hint or extra details could go here */}
+          </div>
 
-        {/* Planetary Summary */}
-        <PlanetarySummary />
+          {/* Planetary Summary - Takes 1 col on Large screens (Right side) */}
+          <div className="lg:col-span-1">
+             <div className="sticky top-6">
+               <PlanetarySummary />
+             </div>
+          </div>
+        </div>
       </div>
     </div>
   )

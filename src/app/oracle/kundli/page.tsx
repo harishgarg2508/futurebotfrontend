@@ -1,16 +1,20 @@
 "use client"
 
 import React, { useState } from "react"
-import { useAppStore } from "@/lib/store"
+import { useAppStore, type ChartProfile } from "@/lib/store"
 import { motion, AnimatePresence } from "framer-motion"
-import { Plus, User, Calendar, MapPin, ArrowLeft, Sparkles } from "lucide-react"
+import { Plus, User, Calendar, MapPin, ArrowLeft, Sparkles, Edit, Clock } from "lucide-react"
 import { NewChartModal } from "@/components/library/NewChartModal"
 import { VisualChart } from "@/components/sky/VisualChart"
 import { useRouter } from "next/navigation"
 
+import { useProfileSync } from "@/hooks/useProfileSync"
+
 export default function KundliPage() {
+  useProfileSync()
   const { savedProfiles, currentProfile, setCurrentProfile } = useAppStore()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [profileToEdit, setProfileToEdit] = useState<ChartProfile | undefined>(undefined)
   const [view, setView] = useState<"list" | "detail">("list")
   const router = useRouter()
 
@@ -21,6 +25,17 @@ export default function KundliPage() {
 
   const handleBack = () => {
     setView("list")
+  }
+
+  const handleEdit = (profile: ChartProfile, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setProfileToEdit(profile)
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setProfileToEdit(undefined)
   }
 
   return (
@@ -93,23 +108,43 @@ export default function KundliPage() {
                   onClick={() => handleChartClick(profile)}
                   className="group relative p-6 rounded-2xl bg-violet-900/10 border border-violet-500/10 hover:bg-violet-900/20 hover:border-violet-500/30 transition-all cursor-pointer overflow-hidden"
                 >
-                  <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Sparkles className="w-5 h-5 text-violet-400" />
-                  </div>
+                  <motion.div 
+                     className="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
+                     whileHover={{ scale: 1.1 }}
+                     whileTap={{ scale: 0.9 }}
+                  >
+                      <button
+                        onClick={(e) => handleEdit(profile, e)}
+                        className="p-2 bg-violet-500/20 hover:bg-violet-500/40 rounded-lg text-violet-300 transition-colors"
+                      >
+                          <Edit size={16} />
+                      </button>
+                  </motion.div>
                   
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500/20 to-rose-500/20 flex items-center justify-center text-violet-300">
                       <User size={24} />
                     </div>
-                    <div className="space-y-1">
-                      <h3 className="font-medium text-lg text-violet-100">{profile.name}</h3>
-                      <div className="flex items-center gap-2 text-violet-400/60 text-sm">
-                        <Calendar size={14} />
-                        <span>{profile.date}</span>
+                    <div className="space-y-1 w-full">
+                      <h3 className="font-medium text-lg text-violet-100 pr-8">{profile.name}</h3>
+                      <div className="flex items-center gap-3 text-violet-400/60 text-sm">
+                        <div className="flex items-center gap-1">
+                            <Calendar size={14} />
+                            <span>{profile.date}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <Clock size={14} />
+                            <span>{profile.time}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 text-violet-400/60 text-sm">
-                        <MapPin size={14} />
-                        <span>{profile.location?.city || "Unknown"}</span>
+                      <div className="flex items-center justify-between text-violet-400/60 text-sm pt-1">
+                        <div className="flex items-center gap-2">
+                            <MapPin size={14} />
+                            <span>{profile.location?.city || "Unknown"}</span>
+                        </div>
+                         <span className="text-[10px] uppercase tracking-wider font-medium text-violet-500/50">
+                             {profile.gender || "Unknown"}
+                         </span>
                       </div>
                     </div>
                   </div>
@@ -148,6 +183,10 @@ export default function KundliPage() {
                                 <span>Name</span>
                                 <span className="text-violet-100">{currentProfile?.name}</span>
                             </div>
+                             <div className="flex justify-between py-2 border-b border-violet-500/10">
+                                <span>Gender</span>
+                                <span className="text-violet-100 capitalize">{currentProfile?.gender || "Unknown"}</span>
+                            </div>
                             <div className="flex justify-between py-2 border-b border-violet-500/10">
                                 <span>Date</span>
                                 <span className="text-violet-100">{currentProfile?.date}</span>
@@ -170,7 +209,7 @@ export default function KundliPage() {
       </div>
 
       <AnimatePresence>
-        {isModalOpen && <NewChartModal onClose={() => setIsModalOpen(false)} />}
+        {isModalOpen && <NewChartModal onClose={handleCloseModal} initialProfile={profileToEdit || undefined} />}
       </AnimatePresence>
     </div>
   )

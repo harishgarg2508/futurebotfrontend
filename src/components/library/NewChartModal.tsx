@@ -11,21 +11,44 @@ import { motion, AnimatePresence } from "framer-motion"
 
 interface NewChartModalProps {
   onClose: () => void
+  initialProfile?: ChartProfile // Optional prop for editing
 }
 
-export const NewChartModal: React.FC<NewChartModalProps> = ({ onClose }) => {
+export const NewChartModal: React.FC<NewChartModalProps> = ({ onClose, initialProfile }) => {
   const setCurrentProfile = useAppStore((state) => state.setCurrentProfile)
   const { user } = useAuth()
 
-  const [name, setName] = useState("")
-  const [gender, setGender] = useState<'male' | 'female'>("male")
-  const [day, setDay] = useState("")
-  const [month, setMonth] = useState("")
-  const [year, setYear] = useState("")
-  const [time, setTime] = useState("")
-  const [locQuery, setLocQuery] = useState("")
+  // Initialize state from initialProfile if available
+  const [name, setName] = useState(initialProfile?.name || "")
+  const [gender, setGender] = useState<'male' | 'female'>(initialProfile?.gender || "male")
+  
+  // Parse date if available
+  const [day, setDay] = useState(() => {
+    if (initialProfile?.date) return initialProfile.date.split("-")[2] || ""
+    return ""
+  })
+  const [month, setMonth] = useState(() => {
+    if (initialProfile?.date) return initialProfile.date.split("-")[1] || ""
+    return ""
+  })
+  const [year, setYear] = useState(() => {
+    if (initialProfile?.date) return initialProfile.date.split("-")[0] || ""
+    return ""
+  })
+
+  const [time, setTime] = useState(initialProfile?.time || "")
+  
+  const [locQuery, setLocQuery] = useState(initialProfile?.location.city || "")
   const [locResults, setLocResults] = useState<any[]>([])
-  const [selectedLoc, setSelectedLoc] = useState<{ lat: number; lon: number; name: string } | null>(null)
+  
+  const [selectedLoc, setSelectedLoc] = useState<{ lat: number; lon: number; name: string } | null>(
+    initialProfile?.location ? {
+        lat: initialProfile.location.lat,
+        lon: initialProfile.location.lon,
+        name: initialProfile.location.city
+    } : null
+  )
+  
   const [loadingLoc, setLoadingLoc] = useState(false)
 
   const months = [
@@ -69,7 +92,7 @@ export const NewChartModal: React.FC<NewChartModalProps> = ({ onClose }) => {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedLoc) {
       alert("Please select a valid location from the search.")
@@ -79,9 +102,9 @@ export const NewChartModal: React.FC<NewChartModalProps> = ({ onClose }) => {
     const finalDate = `${year}-${month}-${day.padStart(2, "0")}`
 
     const newProfile: ChartProfile = {
-      id: crypto.randomUUID(),
+      id: initialProfile?.id || crypto.randomUUID(), // Reuse ID if editing
       name: name,
-      gender: gender,
+      gender: gender || "male",
       date: finalDate,
       time: time,
       location: {
@@ -91,12 +114,30 @@ export const NewChartModal: React.FC<NewChartModalProps> = ({ onClose }) => {
       },
     }
 
-    if (user) {
-      addProfileToFirebase(user.uid, newProfile)
-    }
+    try {
+        if (user) {
+          // Await the firebase operation to ensure it completes
+          await addProfileToFirebase(user.uid, newProfile)
+        }
 
-    setCurrentProfile(newProfile)
-    onClose()
+        // Clear cache for this specific chart data to ensure fresh fetch
+        if (typeof window !== 'undefined') {
+            const cacheKey = `birth_chart_${JSON.stringify({
+                date: finalDate,
+                time: time,
+                lat: selectedLoc.lat,
+                lon: selectedLoc.lon
+            })}`
+            localStorage.removeItem(cacheKey)
+        }
+
+        // This invalidates currentChartData in the store, triggering a re-fetch in VisualChart
+        setCurrentProfile(newProfile)
+        onClose()
+    } catch (error) {
+        console.error("Error saving profile:", error)
+        alert("Failed to save chart. Please try again.")
+    }
   }
 
   return (
@@ -158,8 +199,8 @@ export const NewChartModal: React.FC<NewChartModalProps> = ({ onClose }) => {
                   <Sparkles className="w-5 h-5 text-violet-300" />
                 </motion.div>
                 <div>
-                  <h3 className="text-lg font-medium text-violet-100">New Celestial Chart</h3>
-                  <p className="text-xs text-violet-400/70">Map your cosmic blueprint</p>
+                  <h3 className="text-lg font-medium text-violet-100">{initialProfile ? "Update Celestial Chart" : "New Celestial Chart"}</h3>
+                  <p className="text-xs text-violet-400/70">{initialProfile ? "Update your cosmic blueprint" : "Map your cosmic blueprint"}</p>
                 </div>
               </div>
               <motion.button
@@ -366,7 +407,7 @@ export const NewChartModal: React.FC<NewChartModalProps> = ({ onClose }) => {
                 whileTap={{ scale: 0.98 }}
                 className="w-full py-4 mt-4 bg-gradient-to-r from-violet-500 to-rose-500 text-white font-medium rounded-2xl shadow-lg shadow-violet-500/25 transition-all"
               >
-                Create Chart
+                {initialProfile ? "Update Chart" : "Create Chart"}
               </motion.button>
             </form>
           </div>

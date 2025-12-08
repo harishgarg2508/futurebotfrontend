@@ -61,7 +61,7 @@ export default function Home() {
       const newProfile = {
         id: crypto.randomUUID(),
         name: finalData.name,
-        gender: finalData.gender,
+        gender: finalData.gender || "male",
         date: finalData.date,
         time: finalData.time,
         location: {

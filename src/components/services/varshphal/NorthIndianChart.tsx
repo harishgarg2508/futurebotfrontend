@@ -92,73 +92,73 @@ export const NorthIndianChart: React.FC<NorthIndianChartProps> = ({
           {/* House 1 (Top Diamond) */}
           {renderPlanets(1, 50, 25)}
           <text x="50" y="45" textAnchor="middle" className="text-[4px] fill-slate-500/50">
-            1
+            {((ascendantSignId + 1 - 2) % 12) + 1}
           </text>
 
           {/* House 2 (Top Left) */}
           {renderPlanets(2, 25, 15)}
           <text x="25" y="5" textAnchor="middle" className="text-[4px] fill-slate-500/50">
-            2
+            {((ascendantSignId + 2 - 2) % 12) + 1}
           </text>
 
           {/* House 3 (Left Top) */}
           {renderPlanets(3, 15, 25)}
           <text x="5" y="25" textAnchor="middle" className="text-[4px] fill-slate-500/50">
-            3
+            {((ascendantSignId + 3 - 2) % 12) + 1}
           </text>
 
           {/* House 4 (Left Diamond) */}
           {renderPlanets(4, 25, 50)}
           <text x="25" y="50" textAnchor="middle" className="text-[4px] fill-slate-500/50">
-            4
+            {((ascendantSignId + 4 - 2) % 12) + 1}
           </text>
 
           {/* House 5 (Left Bottom) */}
           {renderPlanets(5, 15, 75)}
           <text x="5" y="75" textAnchor="middle" className="text-[4px] fill-slate-500/50">
-            5
+            {((ascendantSignId + 5 - 2) % 12) + 1}
           </text>
 
           {/* House 6 (Bottom Left) */}
           {renderPlanets(6, 25, 85)}
           <text x="25" y="95" textAnchor="middle" className="text-[4px] fill-slate-500/50">
-            6
+            {((ascendantSignId + 6 - 2) % 12) + 1}
           </text>
 
           {/* House 7 (Bottom Diamond) */}
           {renderPlanets(7, 50, 75)}
           <text x="50" y="55" textAnchor="middle" className="text-[4px] fill-slate-500/50">
-            7
+            {((ascendantSignId + 7 - 2) % 12) + 1}
           </text>
 
           {/* House 8 (Bottom Right) */}
           {renderPlanets(8, 75, 85)}
           <text x="75" y="95" textAnchor="middle" className="text-[4px] fill-slate-500/50">
-            8
+            {((ascendantSignId + 8 - 2) % 12) + 1}
           </text>
 
           {/* House 9 (Right Bottom) */}
           {renderPlanets(9, 85, 75)}
           <text x="95" y="75" textAnchor="middle" className="text-[4px] fill-slate-500/50">
-            9
+            {((ascendantSignId + 9 - 2) % 12) + 1}
           </text>
 
           {/* House 10 (Right Diamond) */}
           {renderPlanets(10, 75, 50)}
           <text x="75" y="50" textAnchor="middle" className="text-[4px] fill-slate-500/50">
-            10
+            {((ascendantSignId + 10 - 2) % 12) + 1}
           </text>
 
           {/* House 11 (Right Top) */}
           {renderPlanets(11, 85, 25)}
           <text x="95" y="25" textAnchor="middle" className="text-[4px] fill-slate-500/50">
-            11
+            {((ascendantSignId + 11 - 2) % 12) + 1}
           </text>
 
           {/* House 12 (Top Right) */}
           {renderPlanets(12, 75, 15)}
           <text x="75" y="5" textAnchor="middle" className="text-[4px] fill-slate-500/50">
-            12
+            {((ascendantSignId + 12 - 2) % 12) + 1}
           </text>
         </svg>
       </div>

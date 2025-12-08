@@ -5,8 +5,14 @@ import { ChartProfile, Message } from '@/lib/store';
 
 // Profile Actions
 export async function addProfileToFirebase(uid: string, profile: ChartProfile) {
+  console.log("Saving profile to Firebase:", profile);
   await setDoc(doc(db, 'users', uid, 'profiles', profile.id), {
-    ...profile,
+    id: profile.id,
+    name: profile.name,
+    gender: profile.gender || "male", // Ensure gender is saved, defaulting to male if missing
+    date: profile.date,
+    time: profile.time,
+    location: profile.location,
     createdAt: Date.now()
   });
 }

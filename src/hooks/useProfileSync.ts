@@ -28,7 +28,8 @@ export function useProfileSync() {
           name: data.name,
           date: data.date,
           time: data.time,
-          location: data.location
+          location: data.location,
+          gender: data.gender
         };
       });
       setSavedProfiles(profiles);
