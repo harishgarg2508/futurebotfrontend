@@ -5,15 +5,25 @@ import { Sidebar } from "@/components/library/Sidebar"
 import { ChatInterface } from "@/components/oracle/ChatInterface"
 import { VisualChart } from "@/components/sky/VisualChart"
 import { useProfileSync } from "@/hooks/useProfileSync"
+import { LanguageToggle } from "@/components/ui/LanguageToggle"
+import "@/lib/i18n"
 import { motion, AnimatePresence } from "framer-motion"
-import { PanelRightOpen, PanelLeftOpen, X, PanelLeftClose, PanelRightClose } from "lucide-react"
+import { PanelRightOpen, PanelLeftOpen, X } from "lucide-react"
+import { ServicesGrid } from "@/components/services/ServicesGrid"
+import { useRouter } from "next/navigation"
 
-export const DashboardLayout: React.FC = () => {
+interface DashboardLayoutProps {
+  defaultView?: 'services' | 'chat'
+}
+
+export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ defaultView = 'services' }) => {
   useProfileSync()
+  const router = useRouter()
 
   const [isLeftOpen, setIsLeftOpen] = React.useState(false)
   const [isRightOpen, setIsRightOpen] = React.useState(false)
   const [isMobile, setIsMobile] = React.useState(true)
+  const [view, setView] = React.useState<'services' | 'chat'>(defaultView)
 
   // Check if we're on desktop and set initial state
   React.useEffect(() => {
@@ -29,6 +39,14 @@ export const DashboardLayout: React.FC = () => {
     window.addEventListener("resize", handleResize)
     return () => window.removeEventListener("resize", handleResize)
   }, [])
+
+  const handleServiceClick = (service: any) => {
+    if (service.id === 'ask-question') {
+      setView('chat')
+    } else if (service.href) {
+      router.push(service.href)
+    }
+  }
 
   return (
     <div className="fixed inset-0 flex h-[100dvh] w-full overflow-hidden font-sans bg-[#0a0612]">
@@ -59,6 +77,27 @@ export const DashboardLayout: React.FC = () => {
             }}
           />
         ))}
+      </div>
+
+       {/* Header / Global Controls - Top Right */}
+       <div className="absolute top-4 right-4 z-50 flex items-center gap-3">
+         <LanguageToggle />
+         
+         <AnimatePresence>
+          {!isRightOpen && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsRightOpen(true)}
+                className="p-3 bg-gradient-to-r from-rose-600 to-pink-600 backdrop-blur-xl border border-rose-400/30 rounded-xl text-white hover:from-rose-500 hover:to-pink-500 transition-all shadow-lg shadow-rose-500/30"
+              >
+                <PanelRightOpen size={18} />
+              </motion.button>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Mobile Overlay for Left Sidebar */}
@@ -108,7 +147,7 @@ export const DashboardLayout: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* CENTER COLUMN: Oracle */}
+      {/* CENTER COLUMN: Oracle or Services */}
       <main className="flex-1 flex flex-col min-w-0 min-h-0 relative z-10">
         {/* Left Toggle Button - Only visible when sidebar is closed */}
         <AnimatePresence>
@@ -131,28 +170,15 @@ export const DashboardLayout: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Right Toggle Button - Only visible when sidebar is closed */}
-        <AnimatePresence>
-          {!isRightOpen && (
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="absolute top-4 right-4 z-50"
-            >
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsRightOpen(true)}
-                className="p-3 bg-gradient-to-r from-rose-600 to-pink-600 backdrop-blur-xl border border-rose-400/30 rounded-xl text-white hover:from-rose-500 hover:to-pink-500 transition-all shadow-lg shadow-rose-500/30"
-              >
-                <PanelRightOpen size={18} />
-              </motion.button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <ChatInterface />
+        {view === 'services' ? (
+          <div className="flex-1 overflow-y-auto p-4 md:p-8 flex flex-col items-center justify-center">
+             <div className="w-full max-w-5xl">
+                <ServicesGrid onServiceClick={handleServiceClick} />
+             </div>
+          </div>
+        ) : (
+           <ChatInterface />
+        )}
       </main>
 
       {/* Mobile Overlay for Right Sidebar */}
@@ -180,7 +206,7 @@ export const DashboardLayout: React.FC = () => {
       >
         <div className="absolute inset-0 bg-gradient-to-b from-[#0f0a1f]/95 via-[#130d24]/95 to-[#0f0a1f]/95 backdrop-blur-xl border-l border-violet-500/10" />
         <div className="relative w-[350px] h-full flex flex-col">
-          {/* Close button for desktop right sidebar */}
+          {/* Close button for desktop right sidebar - Note: Toggle button handles Open. X Handles Close. */}
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}

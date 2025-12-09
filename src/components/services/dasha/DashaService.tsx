@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
+import { useTranslation } from "react-i18next"
 import { useAppStore, type ChartProfile } from "@/lib/store"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -17,12 +18,14 @@ import { fetchDashaPeriods, togglePath, resetDasha } from "@/redux/slices/dashaS
 import type { RootState, AppDispatch } from "@/redux/store"
 
 export const DashaService = () => {
+  const { t } = useTranslation()
   const { savedProfiles } = useAppStore()
   const router = useRouter()
   const dispatch = useDispatch<AppDispatch>()
   const { periods, loading, error, expandedPaths } = useSelector((state: RootState) => state.dasha)
 
   const [selectedProfile, setSelectedProfile] = useState<ChartProfile | null>(null)
+  const [calculatedProfileId, setCalculatedProfileId] = useState<string | null>(null)
   const [showSaved, setShowSaved] = useState(false)
   const [manualData, setManualData] = useState({
     name: "",
@@ -46,6 +49,7 @@ export const DashaService = () => {
         return
     }
     
+    setCalculatedProfileId(selectedProfile.id)
     dispatch(resetDasha())
     dispatch(fetchDashaPeriods({
         birthDetails: {
@@ -118,17 +122,17 @@ export const DashaService = () => {
                 className="flex items-center gap-2 px-3 py-1.5 bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 rounded-lg text-violet-300 hover:text-violet-100 transition-all text-sm font-medium group"
             >
                 <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-                Go Back
+                {t('dasha.back', 'Go Back')}
             </button>
         </div>
         
         <div className="text-center space-y-2">
             <h1 className="text-3xl font-light tracking-tight">
               <span className="bg-gradient-to-r from-amber-200 via-rose-200 to-violet-200 bg-clip-text text-transparent">
-                Vimshottari Dasha
+                {t('dasha.title', 'Vimshottari Dasha')}
               </span>
             </h1>
-            <p className="text-violet-400/60 text-sm">Explore planetary periods up to 5 levels</p>
+            <p className="text-violet-400/60 text-sm">{t('dasha.subtitle', 'Explore planetary periods up to 5 levels')}</p>
         </div>
 
         {/* Profile Selection */}
@@ -140,7 +144,7 @@ export const DashaService = () => {
                 >
                     <span className="flex items-center gap-2">
                         <User size={16} className="text-violet-400" />
-                        {selectedProfile ? selectedProfile.name : "Choose saved profile..."}
+                        {selectedProfile ? selectedProfile.name : t('dasha.choose_profile', 'Choose saved profile...')}
                     </span>
                     <ChevronDown size={16} className={`text-slate-500 transition-transform ${showSaved ? "rotate-180" : ""}`} />
                 </button>
@@ -172,7 +176,7 @@ export const DashaService = () => {
             
             <button
                 onClick={handleCalculate}
-                disabled={!selectedProfile || loading}
+                disabled={!selectedProfile || loading || (selectedProfile.id === calculatedProfileId)}
                 className="w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-medium shadow-lg shadow-violet-500/20 hover:shadow-violet-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
                 {loading && !periods['root'] ? (
@@ -180,7 +184,7 @@ export const DashaService = () => {
                 ) : (
                     <>
                         <Sparkles size={18} />
-                        Calculate Dasha
+                        {t('dasha.calculate', 'Calculate Dasha')}
                     </>
                 )}
             </button>
@@ -229,8 +233,17 @@ const PLANET_SHORT_NAMES: Record<string, string> = {
 }
 
 const DashaChain = ({ path, currentLord }: { path: string, currentLord: string }) => {
+    const { t, i18n } = useTranslation()
+    
+    // Short Name Helper
+    const getShortName = (name: string) => {
+        const localized = t(`planets.${name}`, name)
+        // If English, 2 chars. If Hindi, full name or 2 chars? Usually Hindi "सूर्य" is short enough.
+        return i18n.language === 'hi' ? localized : localized.substring(0, 2)
+    }
+
     if (path === "root") {
-        return <span className={PLANET_COLORS[currentLord] || "text-slate-200"}>{currentLord}</span>
+        return <span className={PLANET_COLORS[currentLord] || "text-slate-200"}>{t(`planets.${currentLord}`, currentLord)}</span>
     }
     
     // Path: "Mars-Rahu", Current: "Jupiter" -> "Mar-Rah-Jup"
@@ -242,7 +255,7 @@ const DashaChain = ({ path, currentLord }: { path: string, currentLord: string }
             {chain.map((lord, idx) => (
                 <React.Fragment key={idx}>
                     <span className={`${PLANET_COLORS[lord] || "text-slate-200"}`}>
-                        {PLANET_SHORT_NAMES[lord] || lord.substring(0, 2)}
+                        {getShortName(lord)}
                     </span>
                     {idx < chain.length - 1 && (
                         <span className="text-slate-600">-</span>
@@ -251,6 +264,17 @@ const DashaChain = ({ path, currentLord }: { path: string, currentLord: string }
             ))}
         </div>
     )
+}
+
+import { format } from "date-fns"
+
+const formatDate = (dateStr: string) => {
+    try {
+        if (!dateStr) return ""
+        return format(new Date(dateStr), "dd-MMM-yyyy")
+    } catch (e) {
+        return dateStr
+    }
 }
 
 const DashaList = ({ 
@@ -268,6 +292,13 @@ const DashaList = ({
     allPeriods: Record<string, any[]>,
     loading: boolean
 }) => {
+    const { t, i18n } = useTranslation()
+    
+    const getShortName = (name: string) => {
+        const localized = t(`planets.${name}`, name)
+        return i18n.language === 'hi' ? localized : localized.substring(0, 2)
+    }
+
     return (
         <div className="space-y-2">
             {items.map((item, idx) => {
@@ -290,7 +321,7 @@ const DashaList = ({
                                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold ${
                                     item.level === 1 ? "bg-violet-500/20 text-violet-300" : "bg-slate-800 text-slate-400"
                                 }`}>
-                                    {PLANET_SHORT_NAMES[item.lord] || item.lord.substring(0, 2)}
+                                    {getShortName(item.lord)}
                                 </div>
                                 <div>
                                     <div className="text-slate-200 font-medium">
@@ -299,11 +330,11 @@ const DashaList = ({
                                     <div className="text-xs text-slate-500 flex items-center gap-2">
                                         <span className="flex items-center gap-1">
                                             <Calendar size={10} />
-                                            {item.start}
+                                            {formatDate(item.start)}
                                         </span>
                                         <span>→</span>
                                         <span className="flex items-center gap-1">
-                                            {item.end}
+                                            {formatDate(item.end)}
                                         </span>
                                     </div>
                                 </div>
@@ -340,7 +371,7 @@ const DashaList = ({
                                                 {loading ? (
                                                     <div className="w-5 h-5 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mx-auto" />
                                                 ) : (
-                                                    <span className="text-xs text-slate-500">No sub-periods found</span>
+                                                    <span className="text-xs text-slate-500">{t('dasha.no_sub_periods', 'No sub-periods found')}</span>
                                                 )}
                                             </div>
                                         )}

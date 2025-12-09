@@ -15,104 +15,63 @@ import { getBirthChart } from "@/services/api/birthChart"
 import { useAppStore } from "@/lib/store"
 import { ServicesGrid } from "@/components/services"
 import { useRouter } from "next/navigation"
+import { useTranslation } from "react-i18next"
+import "@/lib/i18n"
+
+import { LanguageToggle } from "@/components/ui/LanguageToggle"
+import "@/lib/i18n"
 
 type Phase = "landing" | "name" | "date" | "time" | "location" | "login" | "awakening" | "dashboard"
 
 export default function Home() {
+  const { t } = useTranslation()
   const { user, signInWithGoogle, loading } = useAuth()
   const { setCurrentProfile, setChartData } = useAppStore()
   const [phase, setPhase] = useState<Phase>("landing")
-
-  const [onboardData, setOnboardData] = useState<{
-    name: string
-    gender: "male" | "female"
-    date: string
-    time: string
-    lat: number
-    lon: number
-    city: string
-  }>({
+  const [dashboardView, setDashboardView] = useState<'services' | 'chat'>('services')
+  const router = useRouter()
+  const [onboardData, setOnboardData] = useState({
     name: "",
-    gender: "male", // Default
+    gender: "",
     date: "",
     time: "",
-    lat: 0,
-    lon: 0,
-    city: "",
+    lat: null as number | null,
+    lon: null as number | null,
+    city: ""
   })
 
-  const handleNext = (data: Partial<typeof onboardData>) => {
-    setOnboardData((prev) => ({ ...prev, ...data }))
-    if (phase === "name") setPhase("date")
-    else if (phase === "date") setPhase("time")
-    else if (phase === "time") setPhase("location")
-    else if (phase === "location") setPhase("login")
-  }
-
-  const fetchInitialChart = async (finalData: typeof onboardData) => {
-    try {
-      const chart = await getBirthChart({
-        date: finalData.date,
-        time: finalData.time,
-        lat: finalData.lat,
-        lon: finalData.lon,
-      })
-
-      const newProfile = {
-        id: crypto.randomUUID(),
-        name: finalData.name,
-        gender: finalData.gender || "male",
-        date: finalData.date,
-        time: finalData.time,
-        location: {
-          lat: finalData.lat,
-          lon: finalData.lon,
-          city: finalData.city,
-        },
-      }
-
-      setCurrentProfile(newProfile)
-      setChartData(chart)
-      setPhase("dashboard")
-
-      const { addProfileToFirebase } = await import("@/services/firebaseService")
-      if (user) addProfileToFirebase(user.uid, newProfile)
-    } catch (e: any) {
-      console.error("Fetch Chart Failed:", e)
-      alert(`Failed to fetch chart: ${e.message || "Unknown Error"}. Please checking backend is running.`)
-      setPhase("dashboard")
+  const handleNext = (data: any) => {
+    setOnboardData(prev => ({ ...prev, ...data }))
+    
+    switch (phase) {
+        case "landing": setPhase("name"); break;
+        case "name": setPhase("date"); break;
+        case "date": setPhase("time"); break;
+        case "time": setPhase("location"); break;
+        case "location": setPhase("login"); break;
+        default: break;
     }
   }
-
-  useEffect(() => {
-    if (user && phase === "awakening" && onboardData.name) {
-      // User just logged in from onboarding
-      fetchInitialChart(onboardData)
-    }
-  }, [user, phase, onboardData])
 
   const handleLogin = async () => {
     try {
-      await signInWithGoogle()
-      setPhase("awakening")
-      // fetchInitialChart is now triggered by the useEffect when user becomes available
-    } catch (err) {
-      console.error("Login failed", err)
-    }
-  }
-
-  // Direct login for existing users - goes straight to dashboard
-  const handleDirectLogin = async () => {
-    try {
-      await signInWithGoogle()
-      setPhase("dashboard")
-    } catch (err) {
-      console.error("Login failed", err)
+        if (!user) {
+            await signInWithGoogle()
+        }
+        setPhase("awakening")
+        setTimeout(() => setPhase("dashboard"), 2500)
+    } catch (error) {
+        console.error(error)
     }
   }
   
-  const router = useRouter()
-
+  const handleDirectLogin = async () => {
+    try {
+        await signInWithGoogle()
+    } catch (error) {
+        console.error(error)
+    }
+  } 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#0a0612]">
@@ -123,10 +82,18 @@ export default function Home() {
 
   return (
     <main className="min-h-screen text-[var(--color-light)] overflow-hidden relative selection:bg-[var(--color-lavender)] selection:text-white font-sans">
+      {/* Global Language Toggle (Visible in Landing/Onboarding) */}
+      {phase !== "dashboard" && (
+        <div className="absolute top-4 right-4 z-50">
+          <LanguageToggle />
+        </div>
+      )}
+
       <AnimatePresence mode="wait">
         {/* Landing */}
         {phase === "landing" && (
           <motion.div
+
             key="landing"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -156,42 +123,25 @@ export default function Home() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                 >
-                  Vedic
-                  <span className="bg-gradient-to-r from-[var(--color-lavender)] to-[var(--color-rose)] bg-clip-text text-transparent">
-                    AI
+                  {/* Simplification for i18n: render full title with gradient on second half if possible, or just full gradient */}
+                  <span className="bg-gradient-to-r from-[var(--color-light)] to-[var(--color-lavender)] bg-clip-text text-transparent">
+                      {t('welcome')}
                   </span>
                 </motion.h1>
-                <motion.p
-                  className="text-[var(--color-muted)] text-lg tracking-widest uppercase"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  Celestial Wisdom
-                </motion.p>
               </div>
 
               {/* CTA Button */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="flex flex-col items-center gap-8 w-full">
                 {user ? (
                   <div className="flex flex-col items-center gap-8 w-full">
-                   <motion.button
-                    onClick={() => setPhase("dashboard")}
-                    className="px-12 py-5 rounded-full btn-celestial text-lg font-medium tracking-wide"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    Enter Dashboard
-                  </motion.button>
                   
                   <div className="w-full max-w-5xl">
                     <ServicesGrid 
-                      title="Celestial Services" 
+                      title={t('celestial_services')}
                       onServiceClick={(service) => {
-                        // Open component or navigate
-                        if (service.component) {
-                             // Handle component logic if needed, for now console log or alert
-                             console.log("Component clicked:", service.component)
+                        if (service.id === 'ask-question') {
+                             setDashboardView('chat')
+                             setPhase("dashboard")
                         }
                         else if (service.href) router.push(service.href)
                       }} 
@@ -209,7 +159,7 @@ export default function Home() {
                       <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-lavender)] to-[var(--color-violet)] opacity-100 group-hover:opacity-90 transition-opacity" />
                       <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-rose)] to-[var(--color-lavender)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       <span className="relative z-10 text-white text-lg font-medium tracking-wide">
-                        Begin Your Journey
+                        {t('begin_journey')}
                       </span>
                     </motion.button>
                     
@@ -221,7 +171,7 @@ export default function Home() {
                       whileTap={{ scale: 0.98 }}
                     >
                       <LogIn className="w-4 h-4" />
-                      <span className="text-sm font-medium">Already have an account? Sign in</span>
+                      <span className="text-sm font-medium">{t('already_have_account')}</span>
                     </motion.button>
                   </>
                 )}
@@ -278,13 +228,13 @@ export default function Home() {
               animate={{ opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
             >
-              Reading the stars...
+              {t('reading_stars')}
             </motion.p>
           </motion.div>
         )}
 
         {/* Dashboard */}
-        {phase === "dashboard" && <DashboardLayout />}
+        {phase === "dashboard" && <DashboardLayout defaultView={dashboardView} />}
       </AnimatePresence>
     </main>
   )

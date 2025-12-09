@@ -3,6 +3,7 @@
 import type React from "react"
 import { useState, useCallback, useEffect } from "react"
 import { useAppStore, type ChartProfile } from "@/lib/store"
+import { useTranslation } from "react-i18next"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Heart,
@@ -31,6 +32,7 @@ const MiniChart: React.FC<{ planets: Record<string, any>; ascendantSignId: numbe
   ascendantSignId,
   label,
 }) => {
+  const { t, i18n } = useTranslation()
   const planetColors: Record<string, string> = {
     Su: "#FFD700",
     Mo: "#E8E8E8",
@@ -61,6 +63,9 @@ const MiniChart: React.FC<{ planets: Record<string, any>; ascendantSignId: numbe
     
     return list.map((p, i) => {
       const base = p.replace("ᴿ", "")
+      const localized = t(`planets.${base}`, base)
+      const displayLabel = i18n.language === 'hi' ? localized : base
+      
       return (
         <text
           key={p}
@@ -71,7 +76,7 @@ const MiniChart: React.FC<{ planets: Record<string, any>; ascendantSignId: numbe
           className="text-[7px] font-bold"
           style={{ fill: planetColors[base] || "#C4B5FD" }}
         >
-          {p}
+          {displayLabel}{p.includes("ᴿ") && "ᴿ"}
         </text>
       )
     })
@@ -394,6 +399,7 @@ interface GunaResult {
 
 // Main Kundli Matching Page
 export const KundliMatchingPage: React.FC = () => {
+  const { t } = useTranslation()
   const { savedProfiles: profiles } = useAppStore()
   const router = useRouter()
 
@@ -542,18 +548,18 @@ export const KundliMatchingPage: React.FC = () => {
             className="absolute left-0 top-1/2 -translate-y-1/2 p-2 px-4 bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 rounded-xl text-violet-300 hover:text-violet-100 transition-all flex items-center gap-2 group"
           >
             <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-            <span className="hidden md:inline text-sm font-medium">Go Back</span>
+            <span className="hidden md:inline text-sm font-medium">{t('dasha.back', 'Go Back')}</span>
           </button>
           
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-500/10 border border-rose-400/20 text-rose-300 text-xs font-medium">
             <Heart size={12} className="animate-pulse" />
-            Kundli Matching
+            {t('services.kundli-matching.title', 'Kundli Matching')}
           </div>
           <h1 className="text-2xl md:text-3xl font-semibold bg-gradient-to-r from-violet-200 via-rose-200 to-amber-200 bg-clip-text text-transparent">
-            Ashtakoot Guna Milan
+            {t('matching.title', 'Ashtakoot Guna Milan')}
           </h1>
           <p className="text-sm text-slate-400 max-w-md mx-auto">
-            Calculate the compatibility score between two birth charts based on Vedic astrology principles
+            {t('matching.subtitle', 'Calculate the compatibility score between two birth charts based on Vedic astrology principles')}
           </p>
         </motion.div>
 
@@ -699,7 +705,7 @@ export const KundliMatchingPage: React.FC = () => {
               <div className="serene-glass rounded-2xl overflow-hidden">
                 <div className="px-5 py-3 bg-gradient-to-r from-violet-500/10 via-rose-500/10 to-amber-500/10 border-b border-violet-400/10">
                   <span className="text-[11px] font-semibold uppercase tracking-widest text-violet-300/80">
-                    Detailed Guna Analysis
+                    {t('matching.detailed_analysis', 'Detailed Guna Analysis')}
                   </span>
                 </div>
                 <div className="p-2">
@@ -707,16 +713,16 @@ export const KundliMatchingPage: React.FC = () => {
                     <thead>
                       <tr>
                         <th className="py-2.5 px-4 text-[10px] uppercase tracking-wider text-violet-300/60 font-semibold text-left">
-                          Guna
+                          {t('matching.columns.guna', 'Guna')}
                         </th>
                         <th className="py-2.5 px-4 text-[10px] uppercase tracking-wider text-violet-300/60 font-semibold text-left hidden md:table-cell">
-                          Aspect
+                          {t('matching.columns.aspect', 'Aspect')}
                         </th>
                         <th className="py-2.5 px-4 text-[10px] uppercase tracking-wider text-violet-300/60 font-semibold text-center">
-                          Score
+                          {t('matching.columns.score', 'Score')}
                         </th>
                         <th className="py-2.5 px-4 text-[10px] uppercase tracking-wider text-violet-300/60 font-semibold text-right">
-                          Status
+                          {t('matching.columns.status', 'Status')}
                         </th>
                       </tr>
                     </thead>
@@ -731,11 +737,15 @@ export const KundliMatchingPage: React.FC = () => {
                             transition={{ delay: 0.1 * index }}
                             className="hover:bg-violet-500/5 transition-colors"
                           >
-                            <td className="py-3 px-4">
-                              <span className="text-sm font-medium text-slate-200">{guna.name}</span>
+                              <td className="py-3 px-4">
+                              <span className="text-sm font-medium text-slate-200">
+                                {t(`matching.guna_type.${guna.name.toLowerCase().replace(' ', '_')}`, guna.name)}
+                              </span>
                             </td>
                             <td className="py-3 px-4 hidden md:table-cell">
-                              <span className="text-xs text-slate-400">{guna.description}</span>
+                              <span className="text-xs text-slate-400">
+                                {t(`matching.description.${guna.name.toLowerCase().replace(' ', '_')}`, guna.description)}
+                              </span>
                             </td>
                             <td className="py-3 px-4">
                               <div className="flex items-center justify-center gap-2">
@@ -754,11 +764,11 @@ export const KundliMatchingPage: React.FC = () => {
                             </td>
                             <td className="py-3 px-4 text-right">
                               {percentage >= 70 ? (
-                                <span className="text-emerald-400 text-xs">Excellent</span>
+                                <span className="text-emerald-400 text-xs">{t('matching.status.excellent', 'Excellent')}</span>
                               ) : percentage >= 40 ? (
-                                <span className="text-amber-400 text-xs">Good</span>
+                                <span className="text-amber-400 text-xs">{t('matching.status.good', 'Good')}</span>
                               ) : (
-                                <span className="text-rose-400 text-xs">Low</span>
+                                <span className="text-rose-400 text-xs">{t('matching.status.low', 'Low')}</span>
                               )}
                             </td>
                           </motion.tr>

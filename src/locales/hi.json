@@ -1,0 +1,73 @@
+{
+    "welcome": "वैदिक एआई",
+    "tagline": "दिव्य ज्ञान",
+    "enter_dashboard": "डैशबोर्ड में जाएं",
+    "begin_journey": "अपनी यात्रा शुरू करें",
+    "already_have_account": "पहले से खाता है? साइन इन करें",
+    "reading_stars": "सितारों को पढ़ा जा रहा है...",
+    "celestial_services": "दिव्य सेवाएँ",
+    "ask_ai": "एआई से पूछें",
+    "home": "होम",
+    "go_back": "वापस जाएं",
+    "planets": {
+        "Sun": "सूर्य",
+        "Moon": "चंद्र",
+        "Mars": "मंगल",
+        "Mercury": "बुध",
+        "Jupiter": "गुरु",
+        "Venus": "शुक्र",
+        "Saturn": "शनि",
+        "Rahu": "राहु",
+        "Ketu": "केतु"
+    },
+    "services": {
+        "kundli": {
+            "title": "कुंडली",
+            "desc": "जन्म कुंडली विश्लेषण"
+        },
+        "varshfala": {
+            "title": "वर्षफल",
+            "desc": "वार्षिक भविष्यफल"
+        },
+        "kundli-matching": {
+            "title": "कुंडली मिलान",
+            "desc": "संगतता विश्लेषण"
+        },
+        "gochar": {
+            "title": "गोचर",
+            "desc": "ग्रह गोचर फल"
+        },
+        "panchang": {
+            "title": "पंचांग",
+            "desc": "आज का पंचांग"
+        },
+        "dasha": {
+            "title": "दशा",
+            "desc": "ग्रह दशा काल"
+        },
+        "muhurta": {
+            "title": "मुहूर्त",
+            "desc": "शुभ समय गणना"
+        },
+        "remedies": {
+            "title": "उपाय",
+            "desc": "ज्योतिषीय समाधान"
+        },
+        "ask-question": {
+            "title": "प्रश्न पूछें",
+            "desc": "AI ज्योतिषी"
+        }
+    },
+    "dasha": {
+        "title": "विंशोत्तरी दशा",
+        "subtitle": "5 स्तरों तक ग्रहों की अवधि देखें",
+        "calculate": "दशा गणना करें",
+        "choose_profile": "प्रोफ़ाइल चुनें...",
+        "back": "वापस जाएं",
+        "no_sub_periods": "कोई उप-अवधि नहीं मिली",
+        "calculating": "गणना जारी है"
+    },
+    "chart": {
+        "house": "भाव"
+    }
+}

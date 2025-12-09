@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { useTranslation } from "react-i18next"
 import { motion } from "framer-motion"
 import { Sun, Moon, Star, Activity, Sparkles } from "lucide-react"
 
@@ -9,37 +10,41 @@ interface PlanetarySidebarProps {
 }
 
 const PlanetarySidebar: React.FC<PlanetarySidebarProps> = ({ chartData }) => {
+  const { t } = useTranslation()
+  
   if (!chartData) return null
 
   const getPlanetSign = (planetName: string) => {
     return chartData.planets?.[planetName]?.sign || "Unknown"
   }
 
-  const ascendant = chartData.ascendant?.sign || "Cancer"
+  const ascendantSign = chartData.ascendant?.sign || "Cancer"
   const sunSign = getPlanetSign("Sun") || "Scorpio"
   const moonSign = getPlanetSign("Moon") || "Pisces"
+
+  const translateSign = (sign: string) => t(`signs.${sign}`, sign)
 
   const cosmicItems = [
     {
       icon: Activity,
-      label: "Ascendant (Lagna)",
-      value: ascendant,
+      label: t('chart.ascendant_lagna', "Ascendant (Lagna)"),
+      value: translateSign(ascendantSign),
       gradient: "from-violet-500/20 to-fuchsia-500/20",
       iconColor: "text-violet-400",
       glowColor: "rgba(139, 92, 246, 0.3)",
     },
     {
       icon: Sun,
-      label: "Sun Sign (Surya)",
-      value: sunSign,
+      label: t('chart.sun_sign_surya', "Sun Sign (Surya)"),
+      value: translateSign(sunSign),
       gradient: "from-amber-500/20 to-orange-500/20",
       iconColor: "text-amber-400",
       glowColor: "rgba(251, 191, 36, 0.3)",
     },
     {
       icon: Moon,
-      label: "Moon Sign (Chandra)",
-      value: moonSign,
+      label: t('chart.moon_sign_chandra', "Moon Sign (Chandra)"),
+      value: translateSign(moonSign),
       gradient: "from-slate-400/20 to-blue-400/20",
       iconColor: "text-slate-300",
       glowColor: "rgba(148, 163, 184, 0.3)",
@@ -67,9 +72,9 @@ const PlanetarySidebar: React.FC<PlanetarySidebarProps> = ({ chartData }) => {
           >
             <Sparkles className="w-4 h-4 text-violet-400" />
           </motion.div>
-          <span className="text-violet-400/80 text-xs uppercase tracking-[0.2em] font-medium">Cosmic Identity</span>
+          <span className="text-violet-400/80 text-xs uppercase tracking-[0.2em] font-medium">{t('chart.cosmic_identity', 'Cosmic Identity')}</span>
         </motion.div>
-        <h1 className="text-3xl text-violet-100 font-light tracking-wide">Natal Chart</h1>
+        <h1 className="text-3xl text-violet-100 font-light tracking-wide">{t('chart.natal_chart', 'Natal Chart')}</h1>
       </div>
 
       {/* Cosmic Items */}

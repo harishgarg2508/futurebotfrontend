@@ -2,7 +2,8 @@
 
 import React from "react"
 import { useAppStore } from "@/lib/store"
-import { NorthIndianChart } from "./NorthIndianChart"
+import { useTranslation } from "react-i18next"
+import { NorthIndianChart } from "@/components/services/varshphal/NorthIndianChart"
 import { PlanetarySummary } from "./PlanetarySummary"
 import { motion } from "framer-motion"
 import { Sparkles, RotateCcw, Star } from "lucide-react"
@@ -11,6 +12,7 @@ import { ServicesButton } from "@/components/services"
 import { useRouter } from "next/navigation"
 
 export const VisualChart: React.FC = () => {
+  const { t } = useTranslation()
   const router = useRouter()
   const { currentChartData, currentProfile, setChartData } = useAppStore()
   const [error, setError] = React.useState<string | null>(null)
@@ -126,7 +128,7 @@ export const VisualChart: React.FC = () => {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-violet-400 to-rose-400" />
-              <span className="text-[10px] uppercase tracking-widest text-violet-300/60 font-medium">Birth Chart</span>
+              <span className="text-[10px] uppercase tracking-widest text-violet-300/60 font-medium">{t('chart.birth_chart', 'Birth Chart')}</span>
             </div>
             <h2 className="text-xl font-semibold bg-gradient-to-r from-violet-200 via-rose-200 to-amber-200 bg-clip-text text-transparent">
               {currentProfile.name}
@@ -134,8 +136,8 @@ export const VisualChart: React.FC = () => {
           </div>
           <div className="text-right flex items-center gap-4">
             <div>
-              <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Ascendant</div>
-              <div className="text-lg font-semibold text-amber-200/90">{currentChartData.ascendant?.sign}</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">{t('chart.ascendant', 'Ascendant')}</div>
+              <div className="text-lg font-semibold text-amber-200/90">{t(`signs.${currentChartData.ascendant?.sign}`, currentChartData.ascendant?.sign)}</div>
             </div>
             <ServicesButton 
               onServiceClick={(service: any) => {

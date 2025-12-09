@@ -1,0 +1,73 @@
+{
+    "welcome": "Vedic AI",
+    "tagline": "Celestial Wisdom",
+    "enter_dashboard": "Enter Dashboard",
+    "begin_journey": "Begin Your Journey",
+    "already_have_account": "Already have an account? Sign in",
+    "reading_stars": "Reading the stars...",
+    "celestial_services": "Celestial Services",
+    "ask_ai": "Ask AI",
+    "home": "Home",
+    "go_back": "Go Back",
+    "planets": {
+        "Sun": "Sun",
+        "Moon": "Moon",
+        "Mars": "Mars",
+        "Mercury": "Mercury",
+        "Jupiter": "Jupiter",
+        "Venus": "Venus",
+        "Saturn": "Saturn",
+        "Rahu": "Rahu",
+        "Ketu": "Ketu"
+    },
+    "services": {
+        "kundli": {
+            "title": "Kundli",
+            "desc": "Birth Chart Analysis"
+        },
+        "varshfala": {
+            "title": "Varshfala",
+            "desc": "Annual Predictions"
+        },
+        "kundli-matching": {
+            "title": "Kundli Matching",
+            "desc": "Compatibility Analysis"
+        },
+        "gochar": {
+            "title": "Gochar",
+            "desc": "Transit Predictions"
+        },
+        "panchang": {
+            "title": "Panchang",
+            "desc": "Today's Almanac"
+        },
+        "dasha": {
+            "title": "Dasha",
+            "desc": "Planetary Periods"
+        },
+        "muhurta": {
+            "title": "Muhurta",
+            "desc": "Auspicious Timing"
+        },
+        "remedies": {
+            "title": "Remedies",
+            "desc": "Astrological Solutions"
+        },
+        "ask-question": {
+            "title": "Ask Question",
+            "desc": "AI Astrologer"
+        }
+    },
+    "dasha": {
+        "title": "Vimshottari Dasha",
+        "subtitle": "Explore planetary periods up to 5 levels",
+        "calculate": "Calculate Dasha",
+        "choose_profile": "Choose saved profile...",
+        "back": "Go Back",
+        "no_sub_periods": "No sub-periods found",
+        "calculating": "Calculating"
+    },
+    "chart": {
+        "house": "House"
+    }
+}
