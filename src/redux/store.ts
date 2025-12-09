@@ -9,6 +9,7 @@ export const store = configureStore({
     varshphal: varshphalReducer,
     dasha: dashaReducer,
     gochar: gocharReducer,
+    match: matchReducer,
   },
 });
 
