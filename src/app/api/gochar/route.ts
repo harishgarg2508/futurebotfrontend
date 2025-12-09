@@ -4,12 +4,13 @@ import backendClient from '@/lib/backendClient';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const response = await backendClient.post('/calculate/dasha-periods', body);
+    // Forward to backend
+    const response = await backendClient.post('/calculate/gochar', body);
     return NextResponse.json(response.data);
   } catch (error: any) {
-    console.error('Error in dasha proxy:', error);
+    console.error('Error in gochar proxy:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch dasha periods' },
+      { error: error.message || 'Failed to fetch gochar data' },
       { status: error.response?.status || 500 }
     );
   }

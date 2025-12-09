@@ -167,11 +167,13 @@ export const NorthIndianChart: React.FC<NorthIndianChartProps> = ({
           {label}
         </div>
       )}
-      <div className="absolute -bottom-6 left-0 w-full text-center">
-        <span className="text-[10px] text-slate-400 flex items-center justify-center gap-1">
-          <span className="text-rose-500 text-xs">●</span> represents Muntha Position
-        </span>
-      </div>
+      {munthaSignId && (
+        <div className="absolute -bottom-6 left-0 w-full text-center">
+            <span className="text-[10px] text-slate-400 flex items-center justify-center gap-1">
+            <span className="text-rose-500 text-xs">●</span> represents Muntha Position
+            </span>
+        </div>
+      )}
     </div>
   )
 }

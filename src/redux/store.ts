@@ -1,11 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit';
 import matchReducer from './slices/matchSlice';
 import varshphalReducer from './slices/varshphalSlice';
+import dashaReducer from './slices/dashaSlice';
+import gocharReducer from './slices/gocharSlice';
 
 export const store = configureStore({
   reducer: {
-    match: matchReducer,
     varshphal: varshphalReducer,
+    dasha: dashaReducer,
+    gochar: gocharReducer,
   },
 });
 
