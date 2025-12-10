@@ -6,6 +6,7 @@ import varshphalReducer from './slices/varshphalSlice';
 import dashaReducer from './slices/dashaSlice';
 import gocharReducer from './slices/gocharSlice';
 import vargaReducer from './slices/vargaSlice';
+import careerReducer from './slices/careerSlice';
 
 const rootReducer = combineReducers({
   varshphal: varshphalReducer,
@@ -13,6 +14,7 @@ const rootReducer = combineReducers({
   gochar: gocharReducer,
   match: matchReducer,
   varga: vargaReducer,
+  career: careerReducer,
 });
 
 const persistConfig = {

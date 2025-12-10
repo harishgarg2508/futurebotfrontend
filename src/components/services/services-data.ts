@@ -101,4 +101,13 @@ export const ASTROLOGY_SERVICES: ServiceConfig[] = [
     gradient: "from-violet-500 to-purple-600",
     href: "/oracle/varga",
   },
+  {
+    id: "career",
+    name: "Career",
+    description: "Titan Career Engine",
+    icon: "⚡",
+    color: "#10B981",
+    gradient: "from-emerald-500 to-teal-600",
+    href: "/career",
+  },
 ]
