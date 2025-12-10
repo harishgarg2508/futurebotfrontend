@@ -92,4 +92,13 @@ export const ASTROLOGY_SERVICES: ServiceConfig[] = [
     gradient: "from-purple-300 to-violet-400",
     href: "/oracle/ask",
   },
+  {
+    id: "varga",
+    name: "Varga Charts",
+    description: "16 Divisional Charts",
+    icon: "☸",
+    color: "#8B5CF6",
+    gradient: "from-violet-500 to-purple-600",
+    href: "/oracle/varga",
+  },
 ]

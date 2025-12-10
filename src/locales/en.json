@@ -56,6 +56,10 @@
         "ask-question": {
             "title": "Ask Question",
             "desc": "AI Astrologer"
+        },
+        "varga": {
+            "title": "Varga Charts",
+            "desc": "16 Divisional Charts"
         }
     },
     "dasha": {
@@ -69,5 +73,85 @@
     },
     "chart": {
         "house": "House"
+    },
+    "signs": {
+        "Aries": "Aries",
+        "Taurus": "Taurus",
+        "Gemini": "Gemini",
+        "Cancer": "Cancer",
+        "Leo": "Leo",
+        "Virgo": "Virgo",
+        "Libra": "Libra",
+        "Scorpio": "Scorpio",
+        "Sagittarius": "Sagittarius",
+        "Capricorn": "Capricorn",
+        "Aquarius": "Aquarius",
+        "Pisces": "Pisces"
+    },
+    "varga": {
+        "planetary_details": "Planetary Details",
+        "sign_id": "Sign ID",
+        "full_deg": "Full Deg",
+        "speed": "Speed",
+        "nakshatra": "Nakshatra",
+        "lord": "Lord",
+        "pada": "Pada",
+        "dignity": "Dignity",
+        "longitude": "Longitude",
+        "retrograde": "Retrograde",
+        "groups": "Varga Groups",
+        "individual": "Individual Charts",
+        "get_charts": "Get Charts",
+        "calculating": "Calculating...",
+        "group_names": {
+            "Shadvarga": "Shadvarga",
+            "Saptavarga": "Saptavarga",
+            "Dashavarga": "Dashavarga",
+            "Shodashavarga": "Shodashavarga"
+        },
+        "charts": {
+            "1": "D1 Rashi",
+            "2": "D2 Hora",
+            "3": "D3 Drekkana",
+            "4": "D4 Chaturthamsa",
+            "5": "D5 Panchamsa",
+            "6": "D6 Shashthamsa",
+            "7": "D7 Saptamsa",
+            "8": "D8 Ashtamsa",
+            "9": "D9 Navamsa",
+            "10": "D10 Dasamsa",
+            "11": "D11 Rudramsa",
+            "12": "D12 Dwadasamsa",
+            "16": "D16 Shodasamsa",
+            "20": "D20 Vimsamsa",
+            "24": "D24 Chaturvimsamsa",
+            "27": "D27 Saptavimsamsa",
+            "30": "D30 Trimshamsa",
+            "40": "D40 Khavedamsa",
+            "45": "D45 Akshavedamsa",
+            "60": "D60 Shastiamsa"
+        },
+        "descriptions": {
+            "1": "Overall life, personality, basic overview",
+            "2": "Wealth, finances, money accumulation",
+            "3": "Siblings, courage, boldness, enterprise",
+            "4": "Good luck, childhood, home, property",
+            "5": "Fame, authority, power, children",
+            "6": "Health, diseases, obstacles",
+            "7": "Children, progeny, family matters",
+            "8": "Unexpected problems, litigation, crisis",
+            "9": "Spouse, marriage, inner strength, dharma",
+            "10": "Career, profession, achievement, status",
+            "11": "Death, destruction, losses",
+            "12": "Parents, past life issues",
+            "16": "Vehicles, comforts, material possessions",
+            "20": "Spiritual aspects, meditation, liberation",
+            "24": "Strengths and weaknesses in detail",
+            "27": "Strengths and weaknesses",
+            "30": "Misfortunes, accidents, challenges",
+            "40": "Additional spiritual insights",
+            "45": "Further subtle analysis",
+            "60": "Most subtle chart, final karmic root"
+        }
     }
 }
