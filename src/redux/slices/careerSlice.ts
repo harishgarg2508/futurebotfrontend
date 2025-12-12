@@ -1,39 +1,29 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import backendClient from '../../lib/backendClient';
+import axios from 'axios';
 import { RootState } from '../store';
 
 // Types
 export interface CareerScore {
-  career: string;
+  category: string;
   score: number;
-  match_pct: number;
-}
-
-export interface UnlockedYoga {
-  id: number;
-  name: string;
-  result: string;
-  tags: string[];
-  impact: any;
+  color: string;
+  yogas: {
+    name: string;
+    desc: string;
+    points: number;
+    tier: string;
+  }[];
 }
 
 export interface CareerPredictionResult {
-  status: string;
-  archetype: string;
-  scores: {
-    CAREER: CareerScore[];
-    ATTRIBUTES: {
-      WEALTH: number;
-      FAME: number;
-      SPIRITUALITY: number;
-      INTUITION: number;
-      AUTHORITY: number;
-      LUCK: number;
-    };
+  user_name: string;
+  hero_stats: {
+    primary_archetype: string;
+    confidence_score: number;
+    top_category: string;
   };
-  unlocked_yogas: UnlockedYoga[];
-  timeline: any[];
-  sherlock_hooks: string[];
+  career_matrix: CareerScore[];
+  oracle_verdict: string;
 }
 
 interface CareerState {
@@ -59,9 +49,9 @@ export const fetchCareerPrediction = createAsyncThunk(
   'career/fetchPrediction',
   async (
     { 
-      date, time, lat, lon, timezone 
+      date, time, lat, lon, timezone, name, language 
     }: { 
-      date: string; time: string; lat: number; lon: number; timezone: string 
+      date: string; time: string; lat: number; lon: number; timezone: string; name?: string; language?: string 
     },
     { getState, rejectWithValue }
   ) => {
@@ -73,16 +63,22 @@ export const fetchCareerPrediction = createAsyncThunk(
     }
 
     try {
-      const response = await backendClient.post('/predict/career', {
+      // Call Next.js API Route (BFF)
+      const response = await axios.post('/api/career/predict', {
         date,
         time,
         lat,
         lon,
         timezone,
+        name,
+        language
       });
       return { result: response.data, key: cacheKey };
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.detail || 'Failed to fetch career prediction');
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return rejectWithValue(error.response?.data?.error || error.message || 'Failed to fetch career prediction');
+      }
+      return rejectWithValue('Failed to fetch career prediction');
     }
   }
 );
