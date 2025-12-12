@@ -106,7 +106,7 @@ const ChaughadiyaRoad: React.FC<ChaughadiyaRoadProps> = ({ data, horaData, onIte
       <AnimatePresence>
         {showRoad && (
           <motion.div
-            className="fixed inset-0 z-50 flex flex-col items-center justify-end md:justify-center"
+            className="fixed inset-0 z-[60] flex flex-col items-center justify-end md:justify-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

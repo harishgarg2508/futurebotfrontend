@@ -191,7 +191,7 @@ const SunArcHero: React.FC<SunArcHeroProps> = ({ heroData, coreData, currentChau
          
          {/* If Night: Show Moon in Center (On top of Arc) - Reduced Size & Aligned */}
          {isNight && (
-             <div className="absolute inset-x-0 top-[60px] flex justify-center z-10">
+             <div className="absolute inset-x-0 top-[40px] flex justify-center z-10">
                  <motion.div 
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -269,7 +269,7 @@ const SunArcHero: React.FC<SunArcHeroProps> = ({ heroData, coreData, currentChau
         </div>
 
         {/* Status Pills Container - Centered Bottom */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-6 z-30 flex flex-col items-center gap-2">
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-6 z-20 flex flex-col items-center gap-2">
             
             {/* 1. Chaughadiya Pill */}
             <motion.div

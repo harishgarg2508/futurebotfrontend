@@ -4,7 +4,10 @@ import React, { useEffect, useState } from 'react';
 import SunArcHero from '@/components/panchang/SunArcHero';
 import PanchangGrid from '@/components/panchang/PanchangGrid';
 import ChaughadiyaRoad from '@/components/panchang/ChaughadiyaRoad';
+import HoraRoad from '@/components/panchang/HoraRoad';
 import RahuKaalWidget from '@/components/panchang/RahuKaalWidget';
+import HoraWidget from '@/components/panchang/HoraWidget';
+import ChaughadiyaWidget from '@/components/panchang/ChaughadiyaWidget';
 import MonthlyHazardsComponent from '@/components/panchang/MonthlyHazards';
 import LocationSearchModal from '@/components/panchang/LocationSearchModal';
 import { PanchangResponse, HoraSlot } from '@/types/panchang';
@@ -204,12 +207,33 @@ export default function PanchangPage() {
                 onItemClick={(type, name) => openBenefit(type, name)}
             />
             
-            {/* 4. Rahu Kaal */}
+            {/* 4. Hora Road - New Bar */}
+            <HoraRoad 
+                data={data.widgets.hora_roadmap}
+                currentTime={data.meta.current_time}
+                onItemClick={(planet) => openBenefit("Hora", planet)}
+            />
+            
+            {/* 5. Rahu Kaal */}
             <RahuKaalWidget 
                 data={data.widgets.rahu_kaal}
             />
             
-            {/* 5. Monthly Hazards */}
+            {/* 6. Hora Widget */}
+            <HoraWidget 
+                data={data.widgets.hora_roadmap}
+                currentTime={data.meta.current_time}
+                onHoraClick={(planet) => openBenefit("Hora", planet)}
+            />
+            
+            {/* 7. Chaughadiya Widget */}
+            <ChaughadiyaWidget 
+                data={data.widgets.chaughadiya_roadmap}
+                currentTime={data.meta.current_time}
+                onChaughadiyaClick={(name) => openBenefit("Chaughadiya", name)}
+            />
+            
+            {/* 8. Monthly Hazards */}
             <MonthlyHazardsComponent 
                 data={data.widgets.monthly_hazards}
                 currentDate={selectedDate}
