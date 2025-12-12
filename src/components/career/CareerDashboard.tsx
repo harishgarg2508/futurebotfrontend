@@ -9,7 +9,7 @@ import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "@/redux/store"
 import { fetchCareerPrediction, generateCacheKey, setPrediction, clearCareerData } from "@/redux/slices/careerSlice"
 import { motion, AnimatePresence } from "framer-motion"
-import { Sparkles, ChevronDown, RefreshCw, Zap, AlertCircle, ArrowLeft } from "lucide-react"
+import { Sparkles, ChevronDown, RefreshCw, Zap, AlertCircle, ArrowLeft, User } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useRouter } from "next/navigation"
 import HeroReveal from "./HeroReveal"
@@ -48,11 +48,16 @@ const DNALoader = () => {
     const xOffset = canvas.width / 2
     const yOffset = 40
     const speed = 0.03
+    const totalHeight = helixLength * verticalSpacing
 
     const render = () => {
       time += speed
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       
+      // Calculate Scanning Ring Position (Ping Pong between top and bottom)
+      const scanY = yOffset + (Math.sin(time) + 1) * 0.5 * totalHeight
+
+      // Render DNA
       // We need to sort particles by Z-index to render back-to-front for proper occlusion
       const particles = []
 
@@ -88,10 +93,9 @@ const DNALoader = () => {
       // Sort by Z (depth)
       particles.sort((a, b) => a.z - b.z)
 
-      // Draw
+      // Draw DNA
       particles.forEach(p => {
         if (p.type === 'connector') {
-            // Gradient for connector
             const gradient = ctx.createLinearGradient(p.x1!, p.y1!, p.x2!, p.y2!)
             gradient.addColorStop(0, `rgba(34, 211, 238, ${p.alpha})`)
             gradient.addColorStop(0.5, `rgba(59, 130, 246, ${p.alpha})`)
@@ -104,14 +108,11 @@ const DNALoader = () => {
             ctx.lineWidth = 3
             ctx.stroke()
         } else {
-            // Node
             ctx.beginPath()
             ctx.arc(p.x!, p.y!, 6 * p.scale!, 0, Math.PI * 2)
             ctx.fillStyle = p.color!
             ctx.globalAlpha = p.alpha!
             ctx.fill()
-            
-            // Glow
             ctx.shadowBlur = 15 * p.scale!
             ctx.shadowColor = p.color!
             ctx.fill()
@@ -120,18 +121,34 @@ const DNALoader = () => {
         }
       })
 
-      // Draw Backbone (Curves) - simplified as connecting lines for now or quadratic curves
-      // To draw smooth curves behind/in-front properly is hard with Z-sorting particles.
-      // A simple approach is to draw lines between consecutive nodes of the same strand.
-      // But we need to split them by Z segments? 
-      // Actually, for a simple loader, the particles + connectors look great. 
-      // Let's add simple connecting lines between nodes *before* drawing nodes, but that messes up Z-sort.
-      // Given the "High Contrast" request, the nodes and bars are the most important.
-      // Let's try to draw segments between i and i+1.
+      // Draw Scanning Ring
+      ctx.save()
+      ctx.beginPath()
+      // Draw an ellipse for the ring
+      ctx.ellipse(xOffset, scanY, radius + 20, 10, 0, 0, Math.PI * 2)
+      ctx.strokeStyle = '#facc15' // Yellow ring
+      ctx.lineWidth = 2
+      ctx.shadowBlur = 10
+      ctx.shadowColor = '#facc15'
+      ctx.stroke()
+
+      // Draw Rays (Scanning Light)
+      // Gradient fading out downwards
+      const rayGradient = ctx.createLinearGradient(xOffset, scanY, xOffset, scanY + 40)
+      rayGradient.addColorStop(0, 'rgba(250, 204, 21, 0.4)')
+      rayGradient.addColorStop(1, 'rgba(250, 204, 21, 0)')
       
-      // Re-loop to draw segments? No, let's stick to the particle system for clarity and performance.
-      // The "High Contrast" look relies heavily on the glowing nodes and bars.
+      ctx.beginPath()
+      ctx.ellipse(xOffset, scanY, radius + 20, 10, 0, 0, Math.PI * 2) 
+      ctx.moveTo(xOffset - (radius + 20), scanY)
+      ctx.lineTo(xOffset - (radius + 10), scanY + 40) // Taper inwards
+      ctx.lineTo(xOffset + (radius + 10), scanY + 40)
+      ctx.lineTo(xOffset + (radius + 20), scanY)
+      ctx.fillStyle = rayGradient
+      ctx.fill()
       
+      ctx.restore()
+
       animationFrameId = requestAnimationFrame(render)
     }
 
@@ -156,7 +173,6 @@ const DNALoader = () => {
         />
       </div>
 
-      {/* Loading Text - High Contrast */}
       <motion.div
         className="mt-4 text-center z-10"
         animate={{ opacity: [0.8, 1, 0.8] }}
@@ -214,16 +230,7 @@ const CareerDashboard = () => {
     }
   }, [selectedProfileId, dispatch])
 
-  // Save to localStorage when prediction updates
-  useEffect(() => {
-    if (currentPrediction && selectedProfileId) {
-      const profile = profiles.find(p => p.id === selectedProfileId)
-      if (profile) {
-        const cacheKey = generateCacheKey(profile.date, profile.time, profile.location.lat, profile.location.lon)
-        localStorage.setItem(`career_prediction_${cacheKey}`, JSON.stringify(currentPrediction))
-      }
-    }
-  }, [currentPrediction, selectedProfileId, profiles])
+  // Save to localStorage REMOVED as per request
 
   useEffect(() => {
     if (loading) {
@@ -246,49 +253,20 @@ const CareerDashboard = () => {
     const profile = profiles.find((p) => p.id === selectedProfileId)
     if (!profile) return
 
-    const cacheKey = generateCacheKey(profile.date, profile.time, profile.location.lat, profile.location.lon)
-    const cachedData = localStorage.getItem(`career_prediction_${cacheKey}`)
-
-    if (cachedData) {
-      // Fake loading for "acting"
-      setShowLoader(true)
-      loadingStartTime.current = Date.now()
-      
-      setTimeout(() => {
-        try {
-          const parsedData = JSON.parse(cachedData)
-          dispatch(setPrediction(parsedData))
-        } catch (e) {
-          console.error("Error parsing cached data", e)
-          // Fallback to API if cache is corrupt
-          dispatch(
-            fetchCareerPrediction({
-              date: profile.date,
-              time: profile.time,
-              lat: profile.location.lat,
-              lon: profile.location.lon,
-              timezone: profile.location.timezone,
-              name: profile.name,
-              language: i18n.language || "hi",
-            }),
-          )
-        } finally {
-          setShowLoader(false)
-        }
-      }, 3000) // 3 seconds fake delay
-    } else {
-      dispatch(
-        fetchCareerPrediction({
-          date: profile.date,
-          time: profile.time,
-          lat: profile.location.lat,
-          lon: profile.location.lon,
-          timezone: profile.location.timezone,
-          name: profile.name,
-          language: i18n.language || "hi",
-        }),
-      )
-    }
+    // ALWAYS Fetch fresh data (Bypass Cache)
+    dispatch(
+      fetchCareerPrediction({
+        date: profile.date,
+        time: profile.time,
+        lat: profile.location.lat,
+        lon: profile.location.lon,
+        timezone: profile.location.timezone,
+        name: profile.name,
+        language: i18n.language || "hi",
+        profileId: profile.id,
+        forceRefresh: true // Bypass Redux/Local cache
+      }),
+    )
   }
 
   const selectedProfile = profiles.find((p) => p.id === selectedProfileId)
@@ -299,130 +277,103 @@ const CareerDashboard = () => {
     <div className="min-h-screen bg-[var(--color-void)] text-[var(--color-light)] p-6 md:p-12 relative overflow-hidden">
       <FloatingStars />
 
-      {/* Header */}
-      <header className="max-w-7xl mx-auto mb-12 text-center relative z-10 pt-20">
-        <div className="absolute top-0 left-0">
-            <button
-              onClick={() => router.push("/")}
-              className="flex items-center gap-2 px-4 py-2 bg-[var(--color-lavender)]/10 hover:bg-[var(--color-lavender)]/20 border border-[var(--color-lavender)]/20 rounded-xl text-[var(--color-lavender)] hover:text-[var(--color-light)] transition-all text-sm font-medium group backdrop-blur-sm"
-            >
-              <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-              Back to Home
-            </button>
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-lavender)]/10 backdrop-blur-sm border border-[var(--color-lavender)]/20 text-[var(--color-lavender)] text-xs font-medium tracking-widest uppercase mb-6"
-        >
-          <Sparkles size={14} className="animate-pulse" />
-          <span>Cosmic Career Intelligence</span>
-        </motion.div>
-
-        <motion.h1
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-[var(--color-lavender)] via-[var(--color-violet)] to-[var(--color-lavender)] bg-clip-text text-transparent mb-4 leading-tight"
-        >
-          Decode Your Destiny
-        </motion.h1>
-
-        <p className="text-[var(--color-lavender)]/70 max-w-2xl mx-auto text-lg font-light tracking-wide">
-          Unlock the cosmic blueprint of your professional journey
-        </p>
-      </header>
-
-      <div className="max-w-2xl mx-auto mb-16 relative z-20">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative">
-          {/* Glow effect */}
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--color-lavender)] to-[var(--color-violet)] rounded-2xl blur opacity-30"></div>
-
-          <div className="relative serene-glass rounded-2xl p-2 flex flex-col sm:flex-row items-stretch gap-2 shadow-2xl">
-            {/* Custom Dropdown */}
-            <div className="relative flex-1">
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full h-full bg-white/5 hover:bg-white/10 text-[var(--color-light)] px-6 py-4 rounded-xl flex items-center justify-between transition-all border border-white/5 hover:border-[var(--color-lavender)]/30 group"
-                disabled={fetchingProfiles}
-              >
-                <div className="flex flex-col items-start">
-                  <span className="text-xs text-[var(--color-lavender)]/60 uppercase tracking-wider font-medium mb-1">
-                    Selected Profile
-                  </span>
-                  <span
-                    className={`font-medium text-lg ${selectedProfile ? "text-[var(--color-light)]" : "text-[var(--color-light)]/40"}`}
-                  >
-                    {selectedProfile ? selectedProfile.name : "Select your chart..."}
-                  </span>
-                </div>
-                <ChevronDown
-                  className={`text-[var(--color-lavender)]/50 transition-transform duration-300 ${isDropdownOpen ? "rotate-180" : ""}`}
-                  size={20}
-                />
-              </button>
-
-              <AnimatePresence>
-                {isDropdownOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-[#1a0a2e]/95 backdrop-blur-xl border border-[var(--color-lavender)]/20 rounded-xl shadow-2xl overflow-hidden z-50"
-                  >
-                    <div className="max-h-60 overflow-y-auto custom-scrollbar p-2 space-y-1">
-                      {profiles.length > 0 ? (
-                        profiles.map((p) => (
-                          <button
-                            key={p.id}
-                            onClick={() => {
-                              setSelectedProfileId(p.id)
-                              setIsDropdownOpen(false)
-                            }}
-                            className={`w-full text-left px-4 py-3 rounded-lg transition-all flex items-center justify-between group ${
-                              selectedProfileId === p.id
-                                ? "bg-[var(--color-lavender)]/20 text-[var(--color-light)] border border-[var(--color-lavender)]/30"
-                                : "hover:bg-white/5 text-[var(--color-lavender)]/70 hover:text-[var(--color-light)]"
-                            }`}
-                          >
-                            <div>
-                              <div className="font-medium">{p.name}</div>
-                              <div className="text-xs opacity-60">{p.date}</div>
-                            </div>
-                            {selectedProfileId === p.id && (
-                              <Sparkles size={14} className="text-[var(--color-rose)] animate-pulse" />
-                            )}
-                          </button>
-                        ))
-                      ) : (
-                        <div className="px-4 py-3 text-center text-[var(--color-light)]/40 italic text-sm">
-                          No profiles found
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+      {/* Header & Input Section - Hide when loading */}
+      {!isDisplayingLoader && (
+        <>
+          <header className="max-w-7xl mx-auto mb-12 text-center relative z-10 pt-20">
+            <div className="absolute top-0 left-0">
+                <button
+                  onClick={() => router.push("/")}
+                  className="flex items-center gap-2 px-4 py-2 bg-[var(--color-lavender)]/10 hover:bg-[var(--color-lavender)]/20 border border-[var(--color-lavender)]/20 rounded-xl text-[var(--color-lavender)] hover:text-[var(--color-light)] transition-all text-sm font-medium group backdrop-blur-sm"
+                >
+                  <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                  {t('Back to Home')}
+                </button>
             </div>
 
-            <button
-              onClick={handleGenerate}
-              disabled={!selectedProfileId || loading || isDisplayingLoader || !!currentPrediction}
-              className="btn-celestial px-8 py-4 rounded-xl font-bold tracking-wide transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group whitespace-nowrap"
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-lavender)]/10 backdrop-blur-sm border border-[var(--color-lavender)]/20 text-[var(--color-lavender)] text-xs font-medium tracking-widest uppercase mb-6"
             >
-              {isDisplayingLoader ? (
-                <RefreshCw className="animate-spin" size={20} />
-              ) : (
-                <Zap size={20} className="group-hover:scale-110 transition-transform" fill="currentColor" />
-              )}
-              <span>REVEAL DESTINY</span>
-            </button>
+              <Sparkles size={14} className="animate-pulse" />
+              <span>{t('Cosmic Career Intelligence')}</span>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-5xl md:text-7xl font-serif font-bold bg-gradient-to-r from-[var(--color-lavender)] via-[var(--color-violet)] to-[var(--color-lavender)] bg-clip-text text-transparent mb-4 leading-tight italic"
+            >
+              {t('Unveil Your Cosmic Path')}
+            </motion.h1>
+          </header>
+
+          <div className="max-w-2xl mx-auto mb-16 relative z-20">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative">
+
+
+              <div className="relative flex flex-col sm:flex-row items-center gap-4">
+                {/* Custom Glassmorphism Dropdown */}
+                <div className="relative flex-1 w-full">
+                  <button
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="w-full flex items-center justify-between p-3 bg-slate-900/50 border border-slate-700/50 rounded-xl text-slate-200 hover:border-violet-500/30 transition-colors"
+                  >
+                    <span className="flex items-center gap-2">
+                      <User size={16} className="text-violet-400" />
+                      {selectedProfile ? selectedProfile.name : t('dasha.choose_profile', 'Choose saved profile...')}
+                    </span>
+                    <ChevronDown size={16} className={`text-slate-500 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {isDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 5 }}
+                        className="absolute top-full left-0 w-full mt-2 bg-slate-900 border border-slate-700 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto custom-scrollbar"
+                      >
+                        {profiles.length > 0 ? (
+                          profiles.map((p) => (
+                            <button
+                                key={p.id}
+                                onClick={() => {
+                                    setSelectedProfileId(p.id)
+                                    setIsDropdownOpen(false)
+                                }}
+                                className="w-full text-left p-3 hover:bg-violet-500/10 text-slate-300 text-sm border-b border-slate-800 last:border-0"
+                            >
+                                {p.name}
+                            </button>
+                          ))
+                        ) : (
+                          <div className="p-3 text-center text-slate-500 text-sm italic">
+                            {t('No profiles found')}
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <button
+                  onClick={handleGenerate}
+                  disabled={!selectedProfileId || loading || isDisplayingLoader || !!currentPrediction}
+                  className="btn-celestial px-4 py-3 rounded-lg font-bold tracking-wide transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group whitespace-nowrap shadow-lg hover:shadow-cyan-500/20"
+                >
+                  <Zap size={16} className="group-hover:scale-110 transition-transform" fill="currentColor" />
+                  <span>{t('Reveal')}</span>
+                </button>
+              </div>
+              <div className="text-center mt-2 text-xs text-[var(--color-light)]/20 font-mono">
+                Language: {i18n.language || "undefined"}
+              </div>
+            </motion.div>
           </div>
-          <div className="text-center mt-2 text-xs text-[var(--color-light)]/20 font-mono">
-            Language: {i18n.language || "undefined"}
-          </div>
-        </motion.div>
-      </div>
+        </>
+      )}
 
       {/* Results Area */}
       <div className="max-w-6xl mx-auto relative min-h-[400px] z-10">

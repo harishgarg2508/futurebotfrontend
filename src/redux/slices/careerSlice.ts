@@ -41,24 +41,25 @@ const initialState: CareerState = {
   currentPrediction: null,
 };
 
-export const generateCacheKey = (date: string, time: string, lat: number, lon: number) => {
-    return `${date}-${time}-${lat}-${lon}`;
+export const generateCacheKey = (date: string, time: string, lat: number, lon: number, profileId: string = '') => {
+    return `${date}-${time}-${lat}-${lon}-${profileId}`;
 };
 
 export const fetchCareerPrediction = createAsyncThunk(
   'career/fetchPrediction',
   async (
     { 
-      date, time, lat, lon, timezone, name, language 
+      date, time, lat, lon, timezone, name, language, profileId, forceRefresh = false
     }: { 
-      date: string; time: string; lat: number; lon: number; timezone: string; name?: string; language?: string 
+      date: string; time: string; lat: number; lon: number; timezone: string; name?: string; language?: string; profileId?: string; forceRefresh?: boolean
     },
     { getState, rejectWithValue }
   ) => {
     const state = getState() as RootState;
-    const cacheKey = generateCacheKey(date, time, lat, lon);
+    const cacheKey = generateCacheKey(date, time, lat, lon, profileId);
     
-    if (state.career.cache[cacheKey]) {
+    // Check cache ONLY if forceRefresh is false
+    if (!forceRefresh && state.career.cache[cacheKey]) {
       return { result: state.career.cache[cacheKey], key: cacheKey };
     }
 
