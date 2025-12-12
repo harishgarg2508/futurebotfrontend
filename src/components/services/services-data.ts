@@ -54,7 +54,7 @@ export const ASTROLOGY_SERVICES: ServiceConfig[] = [
     icon: "☿",
     color: "#34D399",
     gradient: "from-emerald-400 to-teal-500",
-    href: "/oracle/panchang",
+    href: "/panchang",
   },
   {
     id: "dasha",
