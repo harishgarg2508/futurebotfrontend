@@ -9,8 +9,6 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
         const { date, time, lat, lon, timezone, name, language } = body;
         
-        console.log("API Received Body:", { date, time, lat, lon, timezone, name, language });
-
         if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
             console.error("GOOGLE_GENERATIVE_AI_API_KEY is not set");
             return NextResponse.json({ error: "Server configuration error: Missing API Key" }, { status: 500 });

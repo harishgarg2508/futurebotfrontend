@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { db } from "@/lib/firebase"
 import { collection, getDocs } from "firebase/firestore"
@@ -27,6 +27,307 @@ interface Profile {
   }
 }
 
+const DNALoader = () => {
+  const helixLength = 20
+  const radius = 40
+  const verticalSpacing = 18
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="flex flex-col items-center justify-center min-h-[500px] relative"
+    >
+      {/* Deep space background glow */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[100px] animate-pulse" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-cyan-500/15 rounded-full blur-[80px]" />
+      </div>
+
+      {/* Floating molecular structures - background */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Hexagonal molecules */}
+        {[...Array(8)].map((_, i) => (
+          <motion.svg
+            key={`hex-${i}`}
+            className="absolute text-blue-400/20"
+            width="60"
+            height="60"
+            viewBox="0 0 60 60"
+            style={{
+              left: `${10 + (i % 4) * 25}%`,
+              top: `${15 + Math.floor(i / 4) * 60}%`,
+            }}
+            animate={{
+              opacity: [0.1, 0.3, 0.1],
+              rotate: [0, 360],
+              scale: [0.8, 1, 0.8],
+            }}
+            transition={{
+              duration: 8 + i * 2,
+              repeat: Number.POSITIVE_INFINITY,
+              delay: i * 0.5,
+            }}
+          >
+            <polygon points="30,5 55,20 55,45 30,60 5,45 5,20" fill="none" stroke="currentColor" strokeWidth="1" />
+            <circle cx="30" cy="5" r="3" fill="currentColor" />
+            <circle cx="55" cy="20" r="3" fill="currentColor" />
+            <circle cx="55" cy="45" r="3" fill="currentColor" />
+            <circle cx="30" cy="60" r="3" fill="currentColor" />
+            <circle cx="5" cy="45" r="3" fill="currentColor" />
+            <circle cx="5" cy="20" r="3" fill="currentColor" />
+          </motion.svg>
+        ))}
+      </div>
+
+      {/* Main DNA Helix Container */}
+      <div className="relative w-[200px] h-[400px] perspective-[1000px]">
+        <motion.div
+          className="relative w-full h-full"
+          style={{ transformStyle: "preserve-3d" }}
+          animate={{ rotateY: 360 }}
+          transition={{ duration: 6, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+        >
+          {/* SVG Filters for enhanced glow */}
+          <svg className="absolute" width="0" height="0">
+            <defs>
+              <filter id="dna-glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+              <linearGradient id="strand-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#06b6d4" />
+                <stop offset="50%" stopColor="#3b82f6" />
+                <stop offset="100%" stopColor="#06b6d4" />
+              </linearGradient>
+              <radialGradient id="node-glow">
+                <stop offset="0%" stopColor="#67e8f9" />
+                <stop offset="50%" stopColor="#06b6d4" />
+                <stop offset="100%" stopColor="#0284c7" />
+              </radialGradient>
+            </defs>
+          </svg>
+
+          {/* DNA Helix pairs */}
+          {[...Array(helixLength)].map((_, i) => {
+            const angle = (i / helixLength) * Math.PI * 4
+            const yPos = i * verticalSpacing
+            const x1 = Math.cos(angle) * radius + 100
+            const x2 = Math.cos(angle + Math.PI) * radius + 100
+            const z1 = Math.sin(angle) * radius
+            const z2 = Math.sin(angle + Math.PI) * radius
+            const opacity1 = 0.4 + (Math.sin(angle) + 1) * 0.3
+            const opacity2 = 0.4 + (Math.sin(angle + Math.PI) + 1) * 0.3
+
+            return (
+              <motion.div
+                key={i}
+                className="absolute"
+                style={{
+                  top: yPos,
+                  width: "100%",
+                  transformStyle: "preserve-3d",
+                }}
+                animate={{
+                  opacity: [0.7, 1, 0.7],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Number.POSITIVE_INFINITY,
+                  delay: i * 0.1,
+                }}
+              >
+                {/* Connection bar (base pair) */}
+                <motion.div
+                  className="absolute h-[3px] rounded-full"
+                  style={{
+                    left: Math.min(x1, x2),
+                    width: Math.abs(x2 - x1),
+                    top: 0,
+                    background: `linear-gradient(90deg, 
+                      rgba(6, 182, 212, ${opacity1}) 0%, 
+                      rgba(59, 130, 246, 0.8) 50%, 
+                      rgba(6, 182, 212, ${opacity2}) 100%)`,
+                    boxShadow: `0 0 10px rgba(6, 182, 212, 0.5), 0 0 20px rgba(59, 130, 246, 0.3)`,
+                    transform: `translateZ(${(z1 + z2) / 2}px)`,
+                  }}
+                />
+
+                {/* Left node (phosphate) */}
+                <motion.div
+                  className="absolute rounded-full"
+                  style={{
+                    left: x1 - 8,
+                    top: -8,
+                    width: 16,
+                    height: 16,
+                    background: `radial-gradient(circle at 30% 30%, #67e8f9, #0891b2)`,
+                    boxShadow: `0 0 15px rgba(6, 182, 212, ${opacity1}), 0 0 30px rgba(6, 182, 212, 0.4), inset 0 0 10px rgba(255,255,255,0.3)`,
+                    transform: `translateZ(${z1}px)`,
+                    opacity: opacity1,
+                  }}
+                />
+
+                {/* Right node (phosphate) */}
+                <motion.div
+                  className="absolute rounded-full"
+                  style={{
+                    left: x2 - 8,
+                    top: -8,
+                    width: 16,
+                    height: 16,
+                    background: `radial-gradient(circle at 30% 30%, #93c5fd, #2563eb)`,
+                    boxShadow: `0 0 15px rgba(59, 130, 246, ${opacity2}), 0 0 30px rgba(59, 130, 246, 0.4), inset 0 0 10px rgba(255,255,255,0.3)`,
+                    transform: `translateZ(${z2}px)`,
+                    opacity: opacity2,
+                  }}
+                />
+
+                {/* Center nucleotide markers */}
+                {i % 2 === 0 && (
+                  <>
+                    <motion.div
+                      className="absolute rounded-full"
+                      style={{
+                        left: (x1 + x2) / 2 - 10,
+                        top: -4,
+                        width: 8,
+                        height: 8,
+                        background: "rgba(34, 211, 238, 0.6)",
+                        boxShadow: "0 0 8px rgba(34, 211, 238, 0.8)",
+                        transform: `translateZ(${(z1 + z2) / 2}px)`,
+                      }}
+                      animate={{ scale: [1, 1.3, 1] }}
+                      transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, delay: i * 0.05 }}
+                    />
+                    <motion.div
+                      className="absolute rounded-full"
+                      style={{
+                        left: (x1 + x2) / 2 + 4,
+                        top: -4,
+                        width: 8,
+                        height: 8,
+                        background: "rgba(96, 165, 250, 0.6)",
+                        boxShadow: "0 0 8px rgba(96, 165, 250, 0.8)",
+                        transform: `translateZ(${(z1 + z2) / 2}px)`,
+                      }}
+                      animate={{ scale: [1.3, 1, 1.3] }}
+                      transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, delay: i * 0.05 }}
+                    />
+                  </>
+                )}
+              </motion.div>
+            )
+          })}
+
+          {/* Backbone strands (continuous helix lines) */}
+          <svg
+            className="absolute top-0 left-0 w-full h-full"
+            style={{ transform: "translateZ(0)" }}
+            viewBox="0 0 200 400"
+          >
+            <defs>
+              <filter id="backbone-glow">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            {/* Left backbone */}
+            <path
+              d={[...Array(helixLength)]
+                .map((_, i) => {
+                  const angle = (i / helixLength) * Math.PI * 4
+                  const x = Math.cos(angle) * radius + 100
+                  const y = i * verticalSpacing
+                  return `${i === 0 ? "M" : "L"} ${x} ${y}`
+                })
+                .join(" ")}
+              fill="none"
+              stroke="url(#strand-gradient)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              filter="url(#backbone-glow)"
+              opacity="0.8"
+            />
+            {/* Right backbone */}
+            <path
+              d={[...Array(helixLength)]
+                .map((_, i) => {
+                  const angle = (i / helixLength) * Math.PI * 4 + Math.PI
+                  const x = Math.cos(angle) * radius + 100
+                  const y = i * verticalSpacing
+                  return `${i === 0 ? "M" : "L"} ${x} ${y}`
+                })
+                .join(" ")}
+              fill="none"
+              stroke="url(#strand-gradient)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              filter="url(#backbone-glow)"
+              opacity="0.8"
+            />
+          </svg>
+        </motion.div>
+
+        {/* Scanning beam effect */}
+        <motion.div
+          className="absolute left-0 right-0 h-2 pointer-events-none"
+          style={{
+            background: "linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.6), transparent)",
+            boxShadow: "0 0 30px rgba(34, 211, 238, 0.5)",
+          }}
+          animate={{ top: ["-5%", "105%"] }}
+          transition={{ duration: 2.5, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+        />
+      </div>
+
+      {/* Loading Text */}
+      <motion.div
+        className="mt-10 text-center z-10"
+        animate={{ opacity: [0.6, 1, 0.6] }}
+        transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+      >
+        <p className="text-cyan-400 font-semibold text-xl tracking-wide">Decoding Career DNA</p>
+        <motion.p
+          className="text-blue-400/60 text-sm mt-2"
+          animate={{ opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
+        >
+          Analyzing cosmic patterns...
+        </motion.p>
+      </motion.div>
+
+      {/* Particle effects */}
+      {[...Array(12)].map((_, i) => (
+        <motion.div
+          key={`particle-${i}`}
+          className="absolute w-1 h-1 rounded-full bg-cyan-400"
+          style={{
+            left: `${30 + Math.random() * 40}%`,
+            top: `${20 + Math.random() * 60}%`,
+            boxShadow: "0 0 6px rgba(34, 211, 238, 0.8)",
+          }}
+          animate={{
+            y: [0, -30, 0],
+            x: [0, (Math.random() - 0.5) * 20, 0],
+            opacity: [0, 0.8, 0],
+            scale: [0, 1.5, 0],
+          }}
+          transition={{
+            duration: 2 + Math.random() * 2,
+            repeat: Number.POSITIVE_INFINITY,
+            delay: i * 0.3,
+          }}
+        />
+      ))}
+    </motion.div>
+  )
+}
+
 const CareerDashboard = () => {
   const { t, i18n } = useTranslation()
   const { user } = useAuth()
@@ -37,6 +338,9 @@ const CareerDashboard = () => {
   const [selectedProfileId, setSelectedProfileId] = useState<string>("")
   const [fetchingProfiles, setFetchingProfiles] = useState(true)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  const [showLoader, setShowLoader] = useState(false)
+  const loadingStartTime = useRef<number>(0)
 
   // 1. Fetch Profiles
   useEffect(() => {
@@ -55,6 +359,21 @@ const CareerDashboard = () => {
     fetchProfiles()
   }, [user])
 
+  useEffect(() => {
+    if (loading) {
+      loadingStartTime.current = Date.now()
+      setShowLoader(true)
+    } else if (loadingStartTime.current > 0) {
+      const elapsed = Date.now() - loadingStartTime.current
+      const minDisplayTime = 3000 // 3 seconds minimum
+      const remainingTime = Math.max(0, minDisplayTime - elapsed)
+
+      setTimeout(() => {
+        setShowLoader(false)
+      }, remainingTime)
+    }
+  }, [loading])
+
   // 2. Handle Profile Selection & Prediction
   const handleGenerate = () => {
     if (!selectedProfileId) return
@@ -69,17 +388,19 @@ const CareerDashboard = () => {
         lon: profile.location.lon,
         timezone: profile.location.timezone,
         name: profile.name,
-        language: i18n.language || 'hi',
+        language: i18n.language || "hi",
       }),
     )
   }
 
   const selectedProfile = profiles.find((p) => p.id === selectedProfileId)
 
+  const isDisplayingLoader = showLoader || loading
+
   return (
     <div className="min-h-screen bg-[var(--color-void)] text-[var(--color-light)] p-6 md:p-12 relative overflow-hidden">
       <FloatingStars />
-      
+
       {/* Header */}
       <header className="max-w-7xl mx-auto mb-12 text-center relative z-10">
         <motion.div
@@ -121,7 +442,9 @@ const CareerDashboard = () => {
                   <span className="text-xs text-[var(--color-lavender)]/60 uppercase tracking-wider font-medium mb-1">
                     Selected Profile
                   </span>
-                  <span className={`font-medium text-lg ${selectedProfile ? "text-[var(--color-light)]" : "text-[var(--color-light)]/40"}`}>
+                  <span
+                    className={`font-medium text-lg ${selectedProfile ? "text-[var(--color-light)]" : "text-[var(--color-light)]/40"}`}
+                  >
                     {selectedProfile ? selectedProfile.name : "Select your chart..."}
                   </span>
                 </div>
@@ -164,7 +487,9 @@ const CareerDashboard = () => {
                           </button>
                         ))
                       ) : (
-                        <div className="px-4 py-3 text-center text-[var(--color-light)]/40 italic text-sm">No profiles found</div>
+                        <div className="px-4 py-3 text-center text-[var(--color-light)]/40 italic text-sm">
+                          No profiles found
+                        </div>
                       )}
                     </div>
                   </motion.div>
@@ -186,7 +511,7 @@ const CareerDashboard = () => {
             </button>
           </div>
           <div className="text-center mt-2 text-xs text-[var(--color-light)]/20 font-mono">
-            Language: {i18n.language || 'undefined'}
+            Language: {i18n.language || "undefined"}
           </div>
         </motion.div>
       </div>
@@ -194,125 +519,9 @@ const CareerDashboard = () => {
       {/* Results Area */}
       <div className="max-w-6xl mx-auto relative min-h-[400px] z-10">
         <AnimatePresence mode="wait">
-          {loading && (
-            <motion.div
-              key="loader"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center min-h-[500px] relative"
-            >
-              {/* Background glow */}
-              <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 via-cyan-500/5 to-blue-500/5 animate-pulse" />
+          {isDisplayingLoader && <DNALoader key="loader" />}
 
-              {/* DNA Container */}
-              <div className="relative w-64 h-96">
-                {/* SVG Filters for neon glow */}
-                <svg className="absolute inset-0" width="0" height="0">
-                  <defs>
-                    <filter id="neon-glow">
-                      <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                      <feMerge>
-                        <feMergeNode in="coloredBlur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
-                  </defs>
-                </svg>
-
-                {/* Left DNA Strand */}
-                <motion.div
-                  className="absolute left-[35%] top-0 w-1 h-full bg-gradient-to-b from-cyan-400 via-blue-400 to-cyan-400 rounded-full"
-                  style={{ filter: "url(#neon-glow)" }}
-                  animate={{ opacity: [0.6, 1, 0.6] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-
-                {/* Right DNA Strand */}
-                <motion.div
-                  className="absolute right-[35%] top-0 w-1 h-full bg-gradient-to-b from-blue-400 via-cyan-400 to-blue-400 rounded-full"
-                  style={{ filter: "url(#neon-glow)" }}
-                  animate={{ opacity: [0.6, 1, 0.6] }}
-                  transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-                />
-
-                {/* Base Pair Connections */}
-                {[...Array(12)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute h-0.5 bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-400"
-                    style={{
-                      left: "35%",
-                      right: "35%",
-                      top: `${8 + i * 7}%`,
-                      filter: "url(#neon-glow)",
-                    }}
-                    animate={{
-                      opacity: [0.3, 0.8, 0.3],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      delay: i * 0.1,
-                    }}
-                  >
-                    {/* Connection nodes */}
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-cyan-400 shadow-lg shadow-cyan-400/50" />
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-blue-400 shadow-lg shadow-blue-400/50" />
-                  </motion.div>
-                ))}
-
-                {/* Floating Molecules */}
-                {[...Array(6)].map((_, i) => (
-                  <motion.div
-                    key={`mol-${i}`}
-                    className="absolute"
-                    style={{
-                      left: `${i % 2 === 0 ? "10%" : "75%"}`,
-                      top: `${15 + i * 15}%`,
-                    }}
-                    animate={{
-                      y: [0, -10, 0],
-                      opacity: [0.3, 0.7, 0.3],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      delay: i * 0.4,
-                    }}
-                  >
-                    <div className="w-3 h-3 rounded-full bg-cyan-400/40 shadow-lg shadow-cyan-400/30" />
-                  </motion.div>
-                ))}
-
-                {/* Scanning Beam */}
-                <motion.div
-                  className="absolute left-[20%] right-[20%] h-1 bg-gradient-to-r from-transparent via-cyan-300 to-transparent"
-                  style={{ filter: "blur(4px)" }}
-                  animate={{
-                    top: ["0%", "100%"],
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
-                />
-              </div>
-
-              {/* Loading Text */}
-              <motion.div
-                className="mt-8 text-center"
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <p className="text-cyan-400 font-medium text-lg">Decoding Career DNA</p>
-                <p className="text-cyan-400/60 text-sm mt-2">Analyzing cosmic patterns...</p>
-              </motion.div>
-            </motion.div>
-          )}
-
-          {!loading && currentPrediction && (
+          {!isDisplayingLoader && currentPrediction && (
             <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
               {/* 1. Hero Reveal */}
               <HeroReveal
@@ -325,7 +534,9 @@ const CareerDashboard = () => {
               <section>
                 <div className="flex items-center gap-4 mb-8">
                   <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[var(--color-lavender)]/30 to-transparent"></div>
-                  <h3 className="text-[var(--color-lavender)]/80 font-medium text-sm tracking-widest uppercase">Career Pathways</h3>
+                  <h3 className="text-[var(--color-lavender)]/80 font-medium text-sm tracking-widest uppercase">
+                    Career Pathways
+                  </h3>
                   <div className="h-px flex-1 bg-gradient-to-l from-transparent via-[var(--color-lavender)]/30 to-transparent"></div>
                 </div>
                 <DestinyStack data={currentPrediction.career_matrix} />
@@ -338,7 +549,7 @@ const CareerDashboard = () => {
             </motion.div>
           )}
 
-          {!loading && !currentPrediction && !error && (
+          {!isDisplayingLoader && !currentPrediction && !error && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -348,7 +559,7 @@ const CareerDashboard = () => {
             </motion.div>
           )}
 
-          {error && (
+          {error && !isDisplayingLoader && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
