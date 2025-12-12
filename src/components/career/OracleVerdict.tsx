@@ -38,19 +38,19 @@ const OracleVerdict: React.FC<OracleVerdictProps> = ({ verdict }) => {
       transition={{ delay: 0.5 }}
       className="relative mt-16"
     >
-      {/* Magical glow background */}
-      <div className="absolute -inset-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-rose-500 rounded-3xl blur-2xl opacity-20 animate-pulse"></div>
+      {/* Outer glow */}
+      <div className="absolute -inset-1 bg-gradient-to-r from-[var(--color-lavender)] to-[var(--color-violet)] rounded-3xl blur-2xl opacity-20 animate-pulse"></div>
 
-      <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl rounded-3xl border border-white/20 overflow-hidden shadow-2xl">
+      <div className="relative serene-glass rounded-3xl border border-[var(--glass-border)] overflow-hidden shadow-2xl">
         {/* Animated gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-fuchsia-500/10 animate-pulse"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-lavender)]/10 via-transparent to-[var(--color-violet)]/10 animate-pulse"></div>
 
-        {/* Floating particles in background */}
-        <div className="absolute inset-0 overflow-hidden">
+        {/* Floating particles */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {[...Array(8)].map((_, i) => (
             <motion.div
               key={i}
-              className="absolute w-1 h-1 bg-violet-400/40 rounded-full"
+              className="absolute w-1 h-1 bg-[var(--color-lavender)]/40 rounded-full"
               style={{
                 left: `${10 + i * 12}%`,
                 top: `${20 + (i % 3) * 30}%`,
@@ -61,7 +61,7 @@ const OracleVerdict: React.FC<OracleVerdictProps> = ({ verdict }) => {
               }}
               transition={{
                 duration: 3 + i * 0.3,
-                repeat: Number.POSITIVE_INFINITY,
+                repeat: Infinity,
                 ease: "easeInOut",
               }}
             />
@@ -69,31 +69,33 @@ const OracleVerdict: React.FC<OracleVerdictProps> = ({ verdict }) => {
         </div>
 
         <div className="relative z-10 p-8 md:p-10">
-          {/* Header with icon */}
+          {/* Header with rotating icon */}
           <div className="flex items-center gap-3 mb-6">
             <div className="relative">
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full blur-lg opacity-50"
+                className="absolute inset-0 bg-gradient-to-r from-[var(--color-lavender)] to-[var(--color-violet)] rounded-full blur-lg opacity-50"
                 animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                transition={{ duration: 2, repeat: Infinity }}
               />
-              <div className="relative bg-gradient-to-br from-violet-500 to-fuchsia-500 p-3 rounded-2xl">
+              <div className="relative bg-gradient-to-br from-[var(--color-lavender)] to-[var(--color-violet)] p-3 rounded-2xl">
                 <Wand2 size={24} className="text-white" />
               </div>
             </div>
 
             <div className="flex-1">
-              <h3 className="text-xl font-bold bg-gradient-to-r from-violet-200 to-fuchsia-200 bg-clip-text text-transparent">
+              <h3 className="text-xl font-bold bg-gradient-to-r from-[var(--color-lavender)] to-[var(--color-violet)] bg-clip-text text-transparent">
                 Cosmic Intelligence Report
               </h3>
-              <p className="text-violet-400/60 text-xs font-medium">Personalized astrological insights</p>
+              <p className="text-[var(--color-lavender)]/60 text-xs font-medium">
+                Personalized insights
+              </p>
             </div>
 
             <motion.div
               animate={{ rotate: 360 }}
-              transition={{ duration: 8, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
             >
-              <Stars size={20} className="text-violet-400/40" />
+              <Stars size={20} className="text-[var(--color-lavender)]/40" />
             </motion.div>
           </div>
 

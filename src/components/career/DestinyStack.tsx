@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ChevronDown, Rocket, Crown } from "lucide-react"
+import { ChevronDown, Crown, Briefcase, Heart, Zap, Star, Shield, Search, Lightbulb, Anchor, Scale, Users } from "lucide-react"
 
 interface Yoga {
   name: string
@@ -24,10 +24,21 @@ interface DestinyStackProps {
 }
 
 const DestinyStack: React.FC<DestinyStackProps> = ({ data }) => {
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(0)
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
 
-  const toggleExpand = (index: number) => {
-    setExpandedIndex(expandedIndex === index ? null : index)
+  const getIcon = (category: string) => {
+    switch (category.toLowerCase()) {
+      case "business": return <Briefcase size={20} />
+      case "health": return <Heart size={20} />
+      case "tech": return <Zap size={20} />
+      case "creative": return <Star size={20} />
+      case "finance": return <Scale size={20} />
+      case "education": return <Lightbulb size={20} />
+      case "legal": return <Shield size={20} />
+      case "engineering": return <Anchor size={20} />
+      case "research": return <Search size={20} />
+      default: return <Users size={20} />
+    }
   }
 
   const getColorClasses = (color: string) => {
@@ -57,135 +68,120 @@ const DestinyStack: React.FC<DestinyStackProps> = ({ data }) => {
   }
 
   return (
-    <div className="space-y-3">
-      {data.map((item, index) => {
-        const isExpanded = expandedIndex === index
-        const isWinner = index === 0
-
-        return (
-          <motion.div
-            key={item.category}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="relative rounded-2xl overflow-hidden transition-all duration-300"
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {data.map((item, index) => (
+        <motion.div
+          key={item.category}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.1 }}
+          className="group"
+        >
+          <div
+            onClick={() => setExpandedCategory(expandedCategory === item.category ? null : item.category)}
+            className={`
+              relative overflow-hidden rounded-2xl transition-all duration-300 cursor-pointer
+              ${
+                expandedCategory === item.category
+                  ? "bg-[var(--color-lavender)]/10 border-[var(--color-lavender)]/30 shadow-[0_0_20px_rgba(167,139,250,0.15)]"
+                  : "bg-white/5 border-white/5 hover:bg-white/10 hover:border-[var(--color-lavender)]/20"
+              }
+              border backdrop-blur-sm
+            `}
           >
-            <div
-              className={`relative bg-white/5 backdrop-blur-sm border transition-all duration-300 rounded-2xl ${
-                isExpanded ? "border-white/20 shadow-lg" : "border-white/10 hover:border-white/20"
-              }`}
-            >
-              {/* Main Bar */}
-              <button
-                onClick={() => toggleExpand(index)}
-                className="w-full relative h-20 flex items-center px-6 z-10 group"
-              >
-                {/* Progress Background */}
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${item.score}%` }}
-                  transition={{ duration: 1.5, ease: "easeOut", delay: index * 0.1 }}
-                  className={`absolute top-0 left-0 h-full opacity-10 bg-gradient-to-r ${getColorClasses(item.color)} rounded-2xl`}
-                />
+            <div className="relative">
+              {/* Progress Bar Background */}
+              <div className="absolute inset-0 bg-[var(--color-deep)]/50 z-0"></div>
+              
+              {/* Animated Progress Bar */}
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${item.score}%` }}
+                transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 + index * 0.1 }}
+                className="absolute top-0 left-0 bottom-0 z-0 opacity-20 group-hover:opacity-30 transition-opacity"
+                style={{
+                  background: `linear-gradient(90deg, var(--color-lavender), var(--color-violet))`,
+                }}
+              />
 
-                {/* Rank/Icon */}
-                <div className="mr-5 flex-shrink-0 w-10">
-                  {isWinner ? (
-                    <div className="relative">
-                      <Crown className="text-amber-400 mx-auto drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" size={24} />
+              <div className="relative z-10 p-5">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${expandedCategory === item.category ? "bg-[var(--color-lavender)]/20 text-[var(--color-light)]" : "bg-white/5 text-[var(--color-lavender)]/70"}`}>
+                      {getIcon(item.category)}
                     </div>
-                  ) : (
-                    <span className="text-violet-400/40 font-bold text-lg">#{index + 1}</span>
-                  )}
-                </div>
-
-                {/* Category Name */}
-                <div className="flex-1 text-left">
-                  <h4
-                    className={`font-bold text-lg transition-colors ${
-                      isWinner ? "text-white" : "text-violet-200/80 group-hover:text-white"
-                    }`}
-                  >
-                    {item.category}
-                  </h4>
-                </div>
-
-                {/* Score & Chevron */}
-                <div className="flex items-center gap-6">
-                  <div className="text-right">
-                    <span className={`text-3xl font-black font-mono ${getTextColor(item.color)}`}>{item.score}</span>
-                    <span className="text-violet-400/50 text-sm ml-1">%</span>
+                    <h4 className={`font-medium text-lg ${expandedCategory === item.category ? "text-[var(--color-light)]" : "text-[var(--color-light)]/80"}`}>
+                      {item.category}
+                    </h4>
                   </div>
-                  <ChevronDown
-                    className={`text-violet-400/50 transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`}
-                    size={22}
-                  />
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl font-bold text-[var(--color-light)]">{item.score}%</span>
+                    <ChevronDown
+                      size={18}
+                      className={`text-[var(--color-lavender)]/50 transition-transform duration-300 ${
+                        expandedCategory === item.category ? "rotate-180" : ""
+                      }`}
+                    />
+                  </div>
                 </div>
-              </button>
 
-              <AnimatePresence>
-                {isExpanded && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="px-6 pb-6 border-t border-white/5">
-                      <div className="mt-4 mb-3 flex items-center gap-2">
-                        <Rocket size={14} className="text-violet-400" />
-                        <span className="text-xs font-semibold text-violet-400 uppercase tracking-wider">
-                          Planetary Evidence
-                        </span>
-                      </div>
-
-                      {item.yogas.length > 0 ? (
-                        <div className="grid gap-3">
-                          {item.yogas.map((yoga, i) => (
-                            <motion.div
-                              key={i}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: i * 0.1 }}
-                              className={`p-4 rounded-xl border backdrop-blur-sm flex items-start gap-3 transition-all hover:scale-[1.02] ${
-                                yoga.tier === "👑"
-                                  ? "bg-amber-500/5 border-amber-400/20 hover:border-amber-400/40"
-                                  : "bg-white/5 border-white/10 hover:border-white/20"
-                              }`}
-                            >
-                              <div className="text-3xl flex-shrink-0">{yoga.tier}</div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex justify-between items-start gap-3 mb-2">
-                                  <h5
-                                    className={`font-bold text-sm leading-tight ${
-                                      yoga.tier === "👑" ? "text-amber-200" : "text-violet-200"
-                                    }`}
-                                  >
-                                    {yoga.name}
-                                  </h5>
-                                  <span className="text-xs font-mono px-2.5 py-1 rounded-full bg-white/10 text-white/80 flex-shrink-0 border border-white/10">
-                                    +{yoga.points}
-                                  </span>
-                                </div>
-                                <p className="text-xs text-violet-300/60 leading-relaxed">{yoga.desc}</p>
-                              </div>
-                            </motion.div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-violet-400/40 text-sm italic py-3 px-4 bg-white/5 rounded-lg border border-white/5">
-                          General planetary strength supports this path
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
+                {/* Yogas Count Badge */}
+                {item.yogas.length > 0 && (
+                  <div className="flex items-center gap-2 mt-1 ml-12">
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-[var(--color-lavender)]/10 text-[var(--color-lavender)] border border-[var(--color-lavender)]/20">
+                        {item.yogas.length} Cosmic Alignments
+                    </span>
+                  </div>
                 )}
-              </AnimatePresence>
+              </div>
             </div>
-          </motion.div>
-        )
-      })}
+
+            {/* Expandable Content */}
+            <AnimatePresence>
+              {expandedCategory === item.category && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-5 pb-5 pt-2 space-y-3 border-t border-[var(--color-lavender)]/10 mx-5 mt-2">
+                    {item.yogas.length > 0 ? (
+                      item.yogas.map((yoga, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ x: -10, opacity: 0 }}
+                          animate={{ x: 0, opacity: 1 }}
+                          transition={{ delay: i * 0.1 }}
+                          className="bg-[var(--color-deep)]/60 rounded-xl p-3 border border-white/5 hover:border-[var(--color-lavender)]/20 transition-colors"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-sm font-semibold text-[var(--color-light)]">{yoga.name}</span>
+                                    {yoga.tier === "👑" && <Crown size={12} className="text-[var(--color-amber)]" fill="currentColor" />}
+                                </div>
+                                <p className="text-xs text-[var(--color-lavender)]/70 leading-relaxed">{yoga.desc}</p>
+                            </div>
+                            <div className="shrink-0 flex flex-col items-end">
+                                <span className="text-xs font-bold text-[var(--color-lavender)]">+{yoga.points}</span>
+                                <span className="text-[10px] text-[var(--color-lavender)]/40">pts</span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))
+                    ) : (
+                      <div className="text-center py-4 text-[var(--color-lavender)]/40 text-sm italic">
+                        No specific yogas found for this path.
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+      ))}
     </div>
   )
 }

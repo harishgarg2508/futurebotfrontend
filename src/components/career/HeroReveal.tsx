@@ -35,136 +35,94 @@ const HeroReveal: React.FC<HeroRevealProps> = ({ archetype, score, topCategory }
   }, [score])
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
-      className="relative w-full max-w-3xl mx-auto mb-16"
-    >
-      <div className="absolute -inset-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-rose-500 rounded-3xl blur-xl opacity-20 animate-pulse"></div>
+    <div className="relative w-full max-w-4xl mx-auto mb-16">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="relative z-10"
+      >
+        {/* Main Card */}
+        <div className="relative overflow-hidden rounded-3xl serene-glass p-8 md:p-12 border border-[var(--glass-border)] shadow-2xl">
+          {/* Animated Background Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-lavender)]/10 via-transparent to-[var(--color-violet)]/10 opacity-50"></div>
+          
+          {/* Floating Orbs Background */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--color-lavender)]/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[var(--color-violet)]/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 animate-pulse" style={{ animationDelay: "2s" }}></div>
 
-      <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-12 text-center overflow-hidden shadow-2xl">
-        {/* Floating particles */}
-        <div className="absolute inset-0 overflow-hidden opacity-30">
-          {[...Array(6)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-2 h-2 bg-violet-400 rounded-full"
-              style={{
-                left: `${20 + i * 15}%`,
-                top: `${30 + (i % 2) * 40}%`,
-              }}
-              animate={{
-                y: [0, -30, 0],
-                opacity: [0.3, 1, 0.3],
-              }}
-              transition={{
-                duration: 3 + i * 0.5,
-                repeat: Number.POSITIVE_INFINITY,
-                ease: "easeInOut",
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Badge */}
-        <motion.div
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 border border-violet-400/30 text-violet-300 text-xs font-bold uppercase tracking-widest mb-6 backdrop-blur-sm"
-        >
-          <Crown size={16} className="animate-pulse" />
-          <span>Cosmic Match</span>
-        </motion.div>
-
-        {/* Archetype Title */}
-        <motion.h2
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="text-5xl md:text-7xl font-black bg-gradient-to-r from-violet-200 via-fuchsia-200 to-rose-200 bg-clip-text text-transparent mb-4 tracking-tight leading-tight"
-        >
-          {archetype}
-        </motion.h2>
-
-        {/* Category Subtitle */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="text-xl text-violet-300/70 font-light mb-10"
-        >
-          Destined for <span className="text-fuchsia-300 font-semibold">{topCategory}</span>
-        </motion.p>
-
-        <div className="relative inline-flex items-center justify-center">
-          {/* Glow background */}
-          <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full blur-2xl opacity-30"></div>
-
-          <svg className="w-44 h-44 transform -rotate-90 relative z-10">
-            <circle
-              cx="88"
-              cy="88"
-              r="75"
-              stroke="currentColor"
-              strokeWidth="6"
-              fill="transparent"
-              className="text-white/5"
-            />
-            <motion.circle
-              cx="88"
-              cy="88"
-              r="75"
-              stroke="url(#scoreGradient)"
-              strokeWidth="6"
-              fill="transparent"
-              strokeLinecap="round"
-              strokeDasharray={471}
-              strokeDashoffset={471 - (471 * score) / 100}
-              initial={{ strokeDashoffset: 471 }}
-              animate={{ strokeDashoffset: 471 - (471 * score) / 100 }}
-              transition={{ duration: 2, ease: "easeOut" }}
-              className="drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]"
-            />
-            <defs>
-              <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#a78bfa" />
-                <stop offset="50%" stopColor="#e879f9" />
-                <stop offset="100%" stopColor="#fb7185" />
-              </linearGradient>
-            </defs>
-          </svg>
-
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <motion.span
-              className="text-5xl font-black bg-gradient-to-br from-violet-200 to-fuchsia-200 bg-clip-text text-transparent"
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+          <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 md:gap-12">
+            {/* Icon / Avatar Section */}
+            <motion.div 
+              initial={{ scale: 0, rotate: -20 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
+              className="relative shrink-0"
             >
-              {count}%
-            </motion.span>
-            <span className="text-xs text-violet-400/60 uppercase tracking-wider mt-2 font-medium">Confidence</span>
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-[var(--color-lavender)] to-[var(--color-violet)] p-1 shadow-[0_0_40px_rgba(139,92,246,0.4)]">
+                <div className="w-full h-full rounded-full bg-[#1a0b2e] flex items-center justify-center overflow-hidden relative">
+                    <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20"></div>
+                    <Crown size={64} className="text-[var(--color-light)] relative z-10 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]" strokeWidth={1.5} />
+                </div>
+              </div>
+              
+              {/* Decorative Rings */}
+              <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] pointer-events-none opacity-40 animate-[spin_10s_linear_infinite]">
+                <circle cx="50%" cy="50%" r="48%" stroke="url(#gradient-ring)" strokeWidth="1" fill="none" strokeDasharray="10 10" />
+                <defs>
+                  <linearGradient id="gradient-ring" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#a78bfa" />
+                    <stop offset="100%" stopColor="#8b5cf6" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </motion.div>
+
+            {/* Text Content */}
+            <div className="text-center md:text-left flex-1">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--color-lavender)]/10 border border-[var(--color-lavender)]/20 text-[var(--color-lavender)] text-xs font-bold tracking-wider uppercase mb-4">
+                  <Star size={12} fill="currentColor" />
+                  <span>Primary Archetype</span>
+                </div>
+                
+                <h2 className="text-4xl md:text-6xl font-bold text-[var(--color-light)] mb-2 tracking-tight drop-shadow-lg">
+                  {archetype}
+                </h2>
+                
+                <div className="h-1 w-24 bg-gradient-to-r from-[var(--color-lavender)] to-transparent rounded-full mb-4 mx-auto md:mx-0"></div>
+                
+                <p className="text-[var(--color-lavender)]/80 text-lg font-light leading-relaxed">
+                  Your cosmic signature dominates in the realm of <span className="text-[var(--color-light)] font-medium">{topCategory}</span>.
+                </p>
+              </motion.div>
+
+              {/* Stats Row */}
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                className="mt-8 flex items-center justify-center md:justify-start gap-8"
+              >
+                <div>
+                    <div className="text-3xl font-bold text-[var(--color-light)]">{count}%</div>
+                    <div className="text-xs text-[var(--color-lavender)]/60 uppercase tracking-wider">Match Strength</div>
+                </div>
+                <div className="w-px h-10 bg-[var(--color-lavender)]/20"></div>
+                 <div>
+                    <div className="text-3xl font-bold text-[var(--color-light)]">Tier 1</div>
+                    <div className="text-xs text-[var(--color-lavender)]/60 uppercase tracking-wider">Cosmic Rank</div>
+                </div>
+              </motion.div>
+            </div>
           </div>
         </div>
-
-        {/* Decorative stars */}
-        <motion.div
-          className="absolute top-8 right-8 text-violet-400/30"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-        >
-          <Sparkles size={24} />
-        </motion.div>
-        <motion.div
-          className="absolute bottom-8 left-8 text-fuchsia-400/30"
-          animate={{ rotate: -360 }}
-          transition={{ duration: 25, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-        >
-          <Star size={20} />
-        </motion.div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   )
 }
 
