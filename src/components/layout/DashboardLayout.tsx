@@ -82,22 +82,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ defaultView = 
        {/* Header / Global Controls - Top Right */}
        <div className="absolute top-4 right-4 z-50 flex items-center gap-3">
          <LanguageToggle />
-         
-         <AnimatePresence>
-          {!isRightOpen && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsRightOpen(true)}
-                className="p-3 bg-gradient-to-r from-rose-600 to-pink-600 backdrop-blur-xl border border-rose-400/30 rounded-xl text-white hover:from-rose-500 hover:to-pink-500 transition-all shadow-lg shadow-rose-500/30"
-              >
-                <PanelRightOpen size={18} />
-              </motion.button>
-          )}
-        </AnimatePresence>
       </div>
 
       {/* Mobile Overlay for Left Sidebar */}

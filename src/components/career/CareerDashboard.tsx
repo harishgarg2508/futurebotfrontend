@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState, useRef } from "react"
@@ -6,10 +7,11 @@ import { db } from "@/lib/firebase"
 import { collection, getDocs } from "firebase/firestore"
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "@/redux/store"
-import { fetchCareerPrediction } from "@/redux/slices/careerSlice"
+import { fetchCareerPrediction, generateCacheKey, setPrediction, clearCareerData } from "@/redux/slices/careerSlice"
 import { motion, AnimatePresence } from "framer-motion"
-import { Sparkles, ChevronDown, RefreshCw, Zap, AlertCircle } from "lucide-react"
+import { Sparkles, ChevronDown, RefreshCw, Zap, AlertCircle, ArrowLeft } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { useRouter } from "next/navigation"
 import HeroReveal from "./HeroReveal"
 import DestinyStack from "./DestinyStack"
 import OracleVerdict from "./OracleVerdict"
@@ -28,9 +30,115 @@ interface Profile {
 }
 
 const DNALoader = () => {
-  const helixLength = 20
-  const radius = 40
-  const verticalSpacing = 18
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    let animationFrameId: number
+    let time = 0
+
+    const helixLength = 24
+    const radius = 50
+    const verticalSpacing = 16
+    const xOffset = canvas.width / 2
+    const yOffset = 40
+    const speed = 0.03
+
+    const render = () => {
+      time += speed
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      
+      // We need to sort particles by Z-index to render back-to-front for proper occlusion
+      const particles = []
+
+      for (let i = 0; i < helixLength; i++) {
+        const angle = (i * 0.5) + time
+        const y = i * verticalSpacing + yOffset
+        
+        // Strand 1
+        const x1 = Math.cos(angle) * radius + xOffset
+        const z1 = Math.sin(angle) * radius
+        const scale1 = (z1 + 200) / 200 // Simple perspective scale
+        const alpha1 = (z1 + radius) / (2 * radius) * 0.8 + 0.2 // Depth based opacity
+
+        // Strand 2 (180 degrees offset)
+        const x2 = Math.cos(angle + Math.PI) * radius + xOffset
+        const z2 = Math.sin(angle + Math.PI) * radius
+        const scale2 = (z2 + 200) / 200
+        const alpha2 = (z2 + radius) / (2 * radius) * 0.8 + 0.2
+
+        particles.push({ x: x1, y, z: z1, scale: scale1, alpha: alpha1, color: '#22d3ee', type: 'node' })
+        particles.push({ x: x2, y, z: z2, scale: scale2, alpha: alpha2, color: '#3b82f6', type: 'node' })
+        
+        // Connector (Base Pair)
+        particles.push({ 
+            x1, y1: y, z1, 
+            x2, y2: y, z2, 
+            z: (z1 + z2) / 2, // Average Z for sorting
+            type: 'connector',
+            alpha: Math.min(alpha1, alpha2)
+        })
+      }
+
+      // Sort by Z (depth)
+      particles.sort((a, b) => a.z - b.z)
+
+      // Draw
+      particles.forEach(p => {
+        if (p.type === 'connector') {
+            // Gradient for connector
+            const gradient = ctx.createLinearGradient(p.x1!, p.y1!, p.x2!, p.y2!)
+            gradient.addColorStop(0, `rgba(34, 211, 238, ${p.alpha})`)
+            gradient.addColorStop(0.5, `rgba(59, 130, 246, ${p.alpha})`)
+            gradient.addColorStop(1, `rgba(34, 211, 238, ${p.alpha})`)
+            
+            ctx.beginPath()
+            ctx.moveTo(p.x1!, p.y1!)
+            ctx.lineTo(p.x2!, p.y2!)
+            ctx.strokeStyle = gradient
+            ctx.lineWidth = 3
+            ctx.stroke()
+        } else {
+            // Node
+            ctx.beginPath()
+            ctx.arc(p.x!, p.y!, 6 * p.scale!, 0, Math.PI * 2)
+            ctx.fillStyle = p.color!
+            ctx.globalAlpha = p.alpha!
+            ctx.fill()
+            
+            // Glow
+            ctx.shadowBlur = 15 * p.scale!
+            ctx.shadowColor = p.color!
+            ctx.fill()
+            ctx.shadowBlur = 0
+            ctx.globalAlpha = 1
+        }
+      })
+
+      // Draw Backbone (Curves) - simplified as connecting lines for now or quadratic curves
+      // To draw smooth curves behind/in-front properly is hard with Z-sorting particles.
+      // A simple approach is to draw lines between consecutive nodes of the same strand.
+      // But we need to split them by Z segments? 
+      // Actually, for a simple loader, the particles + connectors look great. 
+      // Let's add simple connecting lines between nodes *before* drawing nodes, but that messes up Z-sort.
+      // Given the "High Contrast" request, the nodes and bars are the most important.
+      // Let's try to draw segments between i and i+1.
+      
+      // Re-loop to draw segments? No, let's stick to the particle system for clarity and performance.
+      // The "High Contrast" look relies heavily on the glowing nodes and bars.
+      
+      animationFrameId = requestAnimationFrame(render)
+    }
+
+    render()
+
+    return () => cancelAnimationFrame(animationFrameId)
+  }, [])
 
   return (
     <motion.div
@@ -39,291 +147,30 @@ const DNALoader = () => {
       exit={{ opacity: 0 }}
       className="flex flex-col items-center justify-center min-h-[500px] relative"
     >
-      {/* Deep space background glow */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[100px] animate-pulse" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-cyan-500/15 rounded-full blur-[80px]" />
-      </div>
-
-      {/* Floating molecular structures - background */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Hexagonal molecules */}
-        {[...Array(8)].map((_, i) => (
-          <motion.svg
-            key={`hex-${i}`}
-            className="absolute text-blue-400/20"
-            width="60"
-            height="60"
-            viewBox="0 0 60 60"
-            style={{
-              left: `${10 + (i % 4) * 25}%`,
-              top: `${15 + Math.floor(i / 4) * 60}%`,
-            }}
-            animate={{
-              opacity: [0.1, 0.3, 0.1],
-              rotate: [0, 360],
-              scale: [0.8, 1, 0.8],
-            }}
-            transition={{
-              duration: 8 + i * 2,
-              repeat: Number.POSITIVE_INFINITY,
-              delay: i * 0.5,
-            }}
-          >
-            <polygon points="30,5 55,20 55,45 30,60 5,45 5,20" fill="none" stroke="currentColor" strokeWidth="1" />
-            <circle cx="30" cy="5" r="3" fill="currentColor" />
-            <circle cx="55" cy="20" r="3" fill="currentColor" />
-            <circle cx="55" cy="45" r="3" fill="currentColor" />
-            <circle cx="30" cy="60" r="3" fill="currentColor" />
-            <circle cx="5" cy="45" r="3" fill="currentColor" />
-            <circle cx="5" cy="20" r="3" fill="currentColor" />
-          </motion.svg>
-        ))}
-      </div>
-
-      {/* Main DNA Helix Container */}
-      <div className="relative w-[200px] h-[400px] perspective-[1000px]">
-        <motion.div
-          className="relative w-full h-full"
-          style={{ transformStyle: "preserve-3d" }}
-          animate={{ rotateY: 360 }}
-          transition={{ duration: 6, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-        >
-          {/* SVG Filters for enhanced glow */}
-          <svg className="absolute" width="0" height="0">
-            <defs>
-              <filter id="dna-glow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="4" result="blur" />
-                <feComposite in="SourceGraphic" in2="blur" operator="over" />
-              </filter>
-              <linearGradient id="strand-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#06b6d4" />
-                <stop offset="50%" stopColor="#3b82f6" />
-                <stop offset="100%" stopColor="#06b6d4" />
-              </linearGradient>
-              <radialGradient id="node-glow">
-                <stop offset="0%" stopColor="#67e8f9" />
-                <stop offset="50%" stopColor="#06b6d4" />
-                <stop offset="100%" stopColor="#0284c7" />
-              </radialGradient>
-            </defs>
-          </svg>
-
-          {/* DNA Helix pairs */}
-          {[...Array(helixLength)].map((_, i) => {
-            const angle = (i / helixLength) * Math.PI * 4
-            const yPos = i * verticalSpacing
-            const x1 = Math.cos(angle) * radius + 100
-            const x2 = Math.cos(angle + Math.PI) * radius + 100
-            const z1 = Math.sin(angle) * radius
-            const z2 = Math.sin(angle + Math.PI) * radius
-            const opacity1 = 0.4 + (Math.sin(angle) + 1) * 0.3
-            const opacity2 = 0.4 + (Math.sin(angle + Math.PI) + 1) * 0.3
-
-            return (
-              <motion.div
-                key={i}
-                className="absolute"
-                style={{
-                  top: yPos,
-                  width: "100%",
-                  transformStyle: "preserve-3d",
-                }}
-                animate={{
-                  opacity: [0.7, 1, 0.7],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Number.POSITIVE_INFINITY,
-                  delay: i * 0.1,
-                }}
-              >
-                {/* Connection bar (base pair) */}
-                <motion.div
-                  className="absolute h-[3px] rounded-full"
-                  style={{
-                    left: Math.min(x1, x2),
-                    width: Math.abs(x2 - x1),
-                    top: 0,
-                    background: `linear-gradient(90deg, 
-                      rgba(6, 182, 212, ${opacity1}) 0%, 
-                      rgba(59, 130, 246, 0.8) 50%, 
-                      rgba(6, 182, 212, ${opacity2}) 100%)`,
-                    boxShadow: `0 0 10px rgba(6, 182, 212, 0.5), 0 0 20px rgba(59, 130, 246, 0.3)`,
-                    transform: `translateZ(${(z1 + z2) / 2}px)`,
-                  }}
-                />
-
-                {/* Left node (phosphate) */}
-                <motion.div
-                  className="absolute rounded-full"
-                  style={{
-                    left: x1 - 8,
-                    top: -8,
-                    width: 16,
-                    height: 16,
-                    background: `radial-gradient(circle at 30% 30%, #67e8f9, #0891b2)`,
-                    boxShadow: `0 0 15px rgba(6, 182, 212, ${opacity1}), 0 0 30px rgba(6, 182, 212, 0.4), inset 0 0 10px rgba(255,255,255,0.3)`,
-                    transform: `translateZ(${z1}px)`,
-                    opacity: opacity1,
-                  }}
-                />
-
-                {/* Right node (phosphate) */}
-                <motion.div
-                  className="absolute rounded-full"
-                  style={{
-                    left: x2 - 8,
-                    top: -8,
-                    width: 16,
-                    height: 16,
-                    background: `radial-gradient(circle at 30% 30%, #93c5fd, #2563eb)`,
-                    boxShadow: `0 0 15px rgba(59, 130, 246, ${opacity2}), 0 0 30px rgba(59, 130, 246, 0.4), inset 0 0 10px rgba(255,255,255,0.3)`,
-                    transform: `translateZ(${z2}px)`,
-                    opacity: opacity2,
-                  }}
-                />
-
-                {/* Center nucleotide markers */}
-                {i % 2 === 0 && (
-                  <>
-                    <motion.div
-                      className="absolute rounded-full"
-                      style={{
-                        left: (x1 + x2) / 2 - 10,
-                        top: -4,
-                        width: 8,
-                        height: 8,
-                        background: "rgba(34, 211, 238, 0.6)",
-                        boxShadow: "0 0 8px rgba(34, 211, 238, 0.8)",
-                        transform: `translateZ(${(z1 + z2) / 2}px)`,
-                      }}
-                      animate={{ scale: [1, 1.3, 1] }}
-                      transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, delay: i * 0.05 }}
-                    />
-                    <motion.div
-                      className="absolute rounded-full"
-                      style={{
-                        left: (x1 + x2) / 2 + 4,
-                        top: -4,
-                        width: 8,
-                        height: 8,
-                        background: "rgba(96, 165, 250, 0.6)",
-                        boxShadow: "0 0 8px rgba(96, 165, 250, 0.8)",
-                        transform: `translateZ(${(z1 + z2) / 2}px)`,
-                      }}
-                      animate={{ scale: [1.3, 1, 1.3] }}
-                      transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, delay: i * 0.05 }}
-                    />
-                  </>
-                )}
-              </motion.div>
-            )
-          })}
-
-          {/* Backbone strands (continuous helix lines) */}
-          <svg
-            className="absolute top-0 left-0 w-full h-full"
-            style={{ transform: "translateZ(0)" }}
-            viewBox="0 0 200 400"
-          >
-            <defs>
-              <filter id="backbone-glow">
-                <feGaussianBlur stdDeviation="3" result="blur" />
-                <feMerge>
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
-            {/* Left backbone */}
-            <path
-              d={[...Array(helixLength)]
-                .map((_, i) => {
-                  const angle = (i / helixLength) * Math.PI * 4
-                  const x = Math.cos(angle) * radius + 100
-                  const y = i * verticalSpacing
-                  return `${i === 0 ? "M" : "L"} ${x} ${y}`
-                })
-                .join(" ")}
-              fill="none"
-              stroke="url(#strand-gradient)"
-              strokeWidth="4"
-              strokeLinecap="round"
-              filter="url(#backbone-glow)"
-              opacity="0.8"
-            />
-            {/* Right backbone */}
-            <path
-              d={[...Array(helixLength)]
-                .map((_, i) => {
-                  const angle = (i / helixLength) * Math.PI * 4 + Math.PI
-                  const x = Math.cos(angle) * radius + 100
-                  const y = i * verticalSpacing
-                  return `${i === 0 ? "M" : "L"} ${x} ${y}`
-                })
-                .join(" ")}
-              fill="none"
-              stroke="url(#strand-gradient)"
-              strokeWidth="4"
-              strokeLinecap="round"
-              filter="url(#backbone-glow)"
-              opacity="0.8"
-            />
-          </svg>
-        </motion.div>
-
-        {/* Scanning beam effect */}
-        <motion.div
-          className="absolute left-0 right-0 h-2 pointer-events-none"
-          style={{
-            background: "linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.6), transparent)",
-            boxShadow: "0 0 30px rgba(34, 211, 238, 0.5)",
-          }}
-          animate={{ top: ["-5%", "105%"] }}
-          transition={{ duration: 2.5, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+      <div className="relative w-[300px] h-[450px]">
+        <canvas 
+            ref={canvasRef} 
+            width={300} 
+            height={450} 
+            className="w-full h-full"
         />
       </div>
 
-      {/* Loading Text */}
+      {/* Loading Text - High Contrast */}
       <motion.div
-        className="mt-10 text-center z-10"
-        animate={{ opacity: [0.6, 1, 0.6] }}
+        className="mt-4 text-center z-10"
+        animate={{ opacity: [0.8, 1, 0.8] }}
         transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
       >
-        <p className="text-cyan-400 font-semibold text-xl tracking-wide">Decoding Career DNA</p>
-        <motion.p
-          className="text-blue-400/60 text-sm mt-2"
-          animate={{ opacity: [0.4, 0.8, 0.4] }}
-          transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
-        >
-          Analyzing cosmic patterns...
-        </motion.p>
-      </motion.div>
-
-      {/* Particle effects */}
-      {[...Array(12)].map((_, i) => (
+        <p className="text-cyan-300 font-bold text-2xl tracking-widest uppercase drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]">
+          Decoding Career DNA
+        </p>
         <motion.div
-          key={`particle-${i}`}
-          className="absolute w-1 h-1 rounded-full bg-cyan-400"
-          style={{
-            left: `${30 + Math.random() * 40}%`,
-            top: `${20 + Math.random() * 60}%`,
-            boxShadow: "0 0 6px rgba(34, 211, 238, 0.8)",
-          }}
-          animate={{
-            y: [0, -30, 0],
-            x: [0, (Math.random() - 0.5) * 20, 0],
-            opacity: [0, 0.8, 0],
-            scale: [0, 1.5, 0],
-          }}
-          transition={{
-            duration: 2 + Math.random() * 2,
-            repeat: Number.POSITIVE_INFINITY,
-            delay: i * 0.3,
-          }}
+          className="h-1 w-24 bg-gradient-to-r from-transparent via-blue-500 to-transparent mx-auto mt-4"
+          animate={{ width: ["0%", "50%", "0%"] }}
+          transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
         />
-      ))}
+      </motion.div>
     </motion.div>
   )
 }
@@ -332,6 +179,7 @@ const CareerDashboard = () => {
   const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const dispatch = useDispatch<AppDispatch>()
+  const router = useRouter()
   const { currentPrediction, loading, error } = useSelector((state: RootState) => state.career)
 
   const [profiles, setProfiles] = useState<Profile[]>([])
@@ -359,6 +207,24 @@ const CareerDashboard = () => {
     fetchProfiles()
   }, [user])
 
+  // Clear data on profile change
+  useEffect(() => {
+    if (selectedProfileId) {
+      dispatch(clearCareerData())
+    }
+  }, [selectedProfileId, dispatch])
+
+  // Save to localStorage when prediction updates
+  useEffect(() => {
+    if (currentPrediction && selectedProfileId) {
+      const profile = profiles.find(p => p.id === selectedProfileId)
+      if (profile) {
+        const cacheKey = generateCacheKey(profile.date, profile.time, profile.location.lat, profile.location.lon)
+        localStorage.setItem(`career_prediction_${cacheKey}`, JSON.stringify(currentPrediction))
+      }
+    }
+  }, [currentPrediction, selectedProfileId, profiles])
+
   useEffect(() => {
     if (loading) {
       loadingStartTime.current = Date.now()
@@ -380,17 +246,49 @@ const CareerDashboard = () => {
     const profile = profiles.find((p) => p.id === selectedProfileId)
     if (!profile) return
 
-    dispatch(
-      fetchCareerPrediction({
-        date: profile.date,
-        time: profile.time,
-        lat: profile.location.lat,
-        lon: profile.location.lon,
-        timezone: profile.location.timezone,
-        name: profile.name,
-        language: i18n.language || "hi",
-      }),
-    )
+    const cacheKey = generateCacheKey(profile.date, profile.time, profile.location.lat, profile.location.lon)
+    const cachedData = localStorage.getItem(`career_prediction_${cacheKey}`)
+
+    if (cachedData) {
+      // Fake loading for "acting"
+      setShowLoader(true)
+      loadingStartTime.current = Date.now()
+      
+      setTimeout(() => {
+        try {
+          const parsedData = JSON.parse(cachedData)
+          dispatch(setPrediction(parsedData))
+        } catch (e) {
+          console.error("Error parsing cached data", e)
+          // Fallback to API if cache is corrupt
+          dispatch(
+            fetchCareerPrediction({
+              date: profile.date,
+              time: profile.time,
+              lat: profile.location.lat,
+              lon: profile.location.lon,
+              timezone: profile.location.timezone,
+              name: profile.name,
+              language: i18n.language || "hi",
+            }),
+          )
+        } finally {
+          setShowLoader(false)
+        }
+      }, 3000) // 3 seconds fake delay
+    } else {
+      dispatch(
+        fetchCareerPrediction({
+          date: profile.date,
+          time: profile.time,
+          lat: profile.location.lat,
+          lon: profile.location.lon,
+          timezone: profile.location.timezone,
+          name: profile.name,
+          language: i18n.language || "hi",
+        }),
+      )
+    }
   }
 
   const selectedProfile = profiles.find((p) => p.id === selectedProfileId)
@@ -402,7 +300,17 @@ const CareerDashboard = () => {
       <FloatingStars />
 
       {/* Header */}
-      <header className="max-w-7xl mx-auto mb-12 text-center relative z-10">
+      <header className="max-w-7xl mx-auto mb-12 text-center relative z-10 pt-20">
+        <div className="absolute top-0 left-0">
+            <button
+              onClick={() => router.push("/")}
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--color-lavender)]/10 hover:bg-[var(--color-lavender)]/20 border border-[var(--color-lavender)]/20 rounded-xl text-[var(--color-lavender)] hover:text-[var(--color-light)] transition-all text-sm font-medium group backdrop-blur-sm"
+            >
+              <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+              Back to Home
+            </button>
+        </div>
+
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -499,10 +407,10 @@ const CareerDashboard = () => {
 
             <button
               onClick={handleGenerate}
-              disabled={!selectedProfileId || loading}
+              disabled={!selectedProfileId || loading || isDisplayingLoader || !!currentPrediction}
               className="btn-celestial px-8 py-4 rounded-xl font-bold tracking-wide transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group whitespace-nowrap"
             >
-              {loading ? (
+              {isDisplayingLoader ? (
                 <RefreshCw className="animate-spin" size={20} />
               ) : (
                 <Zap size={20} className="group-hover:scale-110 transition-transform" fill="currentColor" />

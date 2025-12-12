@@ -90,6 +90,11 @@ const careerSlice = createSlice({
     clearCareerData: (state) => {
       state.currentPrediction = null;
       state.error = null;
+    },
+    setPrediction: (state, action: PayloadAction<CareerPredictionResult>) => {
+      state.currentPrediction = action.payload;
+      state.loading = false;
+      state.error = null;
     }
   },
   extraReducers: (builder) => {
@@ -111,5 +116,5 @@ const careerSlice = createSlice({
   },
 });
 
-export const { clearCareerData } = careerSlice.actions;
+export const { clearCareerData, setPrediction } = careerSlice.actions;
 export default careerSlice.reducer;

@@ -11,6 +11,7 @@ import StepLocation from "@/components/onboarding/StepLocation"
 import StepLogin from "@/components/onboarding/StepLogin"
 import FloatingStars from "@/components/onboarding/FloatingStars"
 import { Sparkles, Loader2, LogIn } from "lucide-react"
+import { CosmicOrb } from "@/components/ui/CosmicOrb"
 import { getBirthChart } from "@/services/api/birthChart"
 import { useAppStore } from "@/lib/store"
 import { ServicesGrid } from "@/components/services"
@@ -109,10 +110,7 @@ export default function Home() {
                 animate={{ y: [0, -15, 0] }}
                 transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-lavender)] to-[var(--color-violet)] blur-3xl opacity-40 scale-150 rounded-full" />
-                <div className="relative w-28 h-28 rounded-full bg-gradient-to-br from-[var(--color-lavender)] via-[var(--color-violet)] to-[var(--color-rose)] flex items-center justify-center shadow-2xl">
-                  <Sparkles className="w-14 h-14 text-white" />
-                </div>
+                <CosmicOrb />
               </motion.div>
 
               {/* Title */}
