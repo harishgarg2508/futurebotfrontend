@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import backendClient from '../../lib/backendClient';
+import axios from 'axios';
 import { RootState } from '../store';
 
 // Types
@@ -74,7 +74,7 @@ export const fetchVargaCharts = createAsyncThunk(
     }
 
     try {
-      const response = await backendClient.post('/calculate/varga', {
+      const response = await axios.post('/api/varga', {
         date,
         time,
         lat,
@@ -104,6 +104,11 @@ const vargaSlice = createSlice({
     },
     resetSelection: (state) => {
         state.selectedVargas = [];
+        state.error = null;
+    },
+    resetLoadingState: (state) => {
+        state.loading = false;
+        state.error = null;
     }
   },
   extraReducers: (builder) => {
@@ -131,5 +136,5 @@ const vargaSlice = createSlice({
   },
 });
 
-export const { setSelectedVargas, clearVargaData, resetSelection } = vargaSlice.actions;
+export const { setSelectedVargas, clearVargaData, resetSelection, resetLoadingState } = vargaSlice.actions;
 export default vargaSlice.reducer;

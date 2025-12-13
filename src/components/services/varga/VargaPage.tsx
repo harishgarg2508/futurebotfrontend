@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/redux/store';
-import { fetchVargaCharts, setSelectedVargas, resetSelection, generateCacheKey } from '@/redux/slices/vargaSlice';
+import { fetchVargaCharts, setSelectedVargas, resetSelection, resetLoadingState, generateCacheKey } from '@/redux/slices/vargaSlice';
 import { VargaSelection } from './VargaSelection';
 import { VargaChartDisplay } from './VargaChartDisplay';
 import { useAppStore, type ChartProfile } from '@/lib/store';
@@ -21,6 +21,11 @@ export default function VargaPage() {
   
   const [selectedProfile, setSelectedProfile] = useState<ChartProfile | null>(null);
   const [showSaved, setShowSaved] = useState(false);
+
+  // Reset loading state on mount (in case of persisted stale state)
+  useEffect(() => {
+    dispatch(resetLoadingState());
+  }, [dispatch]);
 
   // Reset selection when profile changes
   useEffect(() => {
@@ -86,16 +91,6 @@ export default function VargaPage() {
                 <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
                 {t('go_back')}
             </button>
-            
-            {selectedVargas.length > 0 && (
-                <button
-                    onClick={handleClearSelection}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg text-red-300 hover:text-red-100 transition-all text-sm font-medium"
-                >
-                    <Trash2 size={16} />
-                    {t('clear_selection', { defaultValue: 'Clear Selection' })}
-                </button>
-            )}
           </div>
           
           <div className="text-center space-y-2">
@@ -166,6 +161,7 @@ export default function VargaPage() {
           onToggleVarga={handleToggleVarga}
           onSelectGroup={handleSelectGroup}
           onGetCharts={handleGetCharts}
+          onClearSelection={handleClearSelection}
           loading={loading}
           disabled={!selectedProfile}
         />
