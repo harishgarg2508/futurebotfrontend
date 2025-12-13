@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "node scripts/mobile-build.js",
+    "build": "next build",
+    "build:mobile": "node scripts/mobile-build.js",
     "start": "next start",
     "lint": "eslint"
   },
