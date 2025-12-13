@@ -1,9 +1,6 @@
-import CareerDashboard from '@/components/career/CareerDashboard';
+'use client';
 
-export const metadata = {
-  title: 'Titan Career Engine | FutureBot',
-  description: 'AI-Powered Vedic Career Analysis',
-};
+import CareerDashboard from '@/components/career/CareerDashboard';
 
 export default function CareerPage() {
   return <CareerDashboard />;
