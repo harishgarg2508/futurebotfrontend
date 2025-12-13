@@ -21,8 +21,12 @@ const playWebSound = (filename: string) => {
 
 // Helper to map names to assets (User can customize this)
 const getNotificationAssets = (name: string, type: string) => { 
-    const isDesktop = Capacitor.getPlatform() === 'web';
-    const prefix = isDesktop ? '/icons/desktop_banner_' : '/icons/banner_';
+    // Detect Mobile: Either native platform OR web with small screen
+    const isNative = Capacitor.getPlatform() !== 'web';
+    const isMobileWeb = typeof window !== 'undefined' && window.innerWidth < 768;
+    const useMobileAssets = isNative || isMobileWeb;
+
+    const prefix = useMobileAssets ? '/icons/banner_' : '/icons/desktop_banner_';
 
     // Default
     let assets = {
