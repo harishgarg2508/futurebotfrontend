@@ -11,7 +11,10 @@ interface ServicesModalProps {
   onServiceClick?: (service: ServiceConfig) => void
 }
 
+import { useModalBackHandler } from "@/hooks/useModalBackHandler"
+
 export function ServicesModal({ isOpen, onClose, onServiceClick }: ServicesModalProps) {
+  useModalBackHandler(isOpen, onClose)
   const handleServiceClick = (service: ServiceConfig) => {
     onServiceClick?.(service)
     onClose()

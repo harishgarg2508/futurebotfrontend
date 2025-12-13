@@ -90,11 +90,11 @@ export function ServicesGrid({
       </AnimatePresence>
 
       {showTitle && (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-          <h2 className="text-2xl font-light text-white mb-2 tracking-wide">{displayTitle}</h2>
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-2 md:mb-8 mt-[-30px] md:mt-0 hidden md:block">
+          <h2 className="text-4xl md:text-2xl font-light text-white mb-1 tracking-wide font-hindi">{t('app_name', 'Vedic AI')}</h2>
           {/* Decorative line */}
           <motion.div
-            className="mx-auto mt-4 h-px w-32 bg-gradient-to-r from-transparent via-violet-400/50 to-transparent"
+            className="mx-auto mt-1 md:mt-4 h-px w-32 bg-gradient-to-r from-transparent via-violet-400/50 to-transparent"
             animate={{ opacity: [0.3, 0.7, 0.3] }}
             transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
           />
@@ -102,14 +102,14 @@ export function ServicesGrid({
       )}
 
       {/* Services Grid */}
-      <div className="grid grid-cols-4 sm:grid-cols-4 md:flex md:flex-wrap justify-center gap-2 md:gap-6 px-2">
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:flex md:flex-wrap justify-center gap-x-2 gap-y-4 md:gap-6 px-1">
         {translatedServices.map((service, index) => (
           <div key={service.id} className="flex justify-center">
              <ServiceIcon 
                 service={service} 
                 index={index} 
                 onClick={handleServiceClick} 
-                size={isMobile ? "sm" : size} 
+                size={isMobile ? "md" : size} 
              />
           </div>
         ))}

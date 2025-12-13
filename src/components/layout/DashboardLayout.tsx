@@ -155,7 +155,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ defaultView = 
         </AnimatePresence>
 
         {view === 'services' ? (
-          <div className="flex-1 overflow-y-auto p-4 md:p-8 flex flex-col items-center justify-center">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 pt-4 md:p-8 flex flex-col items-center justify-start md:justify-center">
              <div className="w-full max-w-5xl">
                 <ServicesGrid onServiceClick={handleServiceClick} />
              </div>

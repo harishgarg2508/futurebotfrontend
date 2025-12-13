@@ -14,7 +14,11 @@ interface NewChartModalProps {
   initialProfile?: ChartProfile // Optional prop for editing
 }
 
+import { useModalBackHandler } from "@/hooks/useModalBackHandler"
+
 export const NewChartModal: React.FC<NewChartModalProps> = ({ onClose, initialProfile }) => {
+  // Pass true for isOpen because NewChartModal is conditionally rendered by parent but when it mounts it is open
+  useModalBackHandler(true, onClose)
   const setCurrentProfile = useAppStore((state) => state.setCurrentProfile)
   const { user } = useAuth()
 

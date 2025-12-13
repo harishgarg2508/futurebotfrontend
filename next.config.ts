@@ -13,7 +13,9 @@ const withPWA = require("@ducanh2912/next-pwa").default({
 });
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Only use static export for mobile builds (Capacitor)
+  // For Vercel/Web, we use default output to support API routes and Image Optimization
+  output: process.env.IS_MOBILE_BUILD === 'true' ? 'export' : undefined,
 
 };
 

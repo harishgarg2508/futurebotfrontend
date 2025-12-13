@@ -11,7 +11,10 @@ interface BenefitDetailsModalProps {
   name: string
 }
 
+import { useModalBackHandler } from "@/hooks/useModalBackHandler"
+
 const BenefitDetailsModal: React.FC<BenefitDetailsModalProps> = ({ isOpen, onClose, data, type, name }) => {
+  useModalBackHandler(isOpen, onClose)
   if (!data) return null
 
   // Helper for colors

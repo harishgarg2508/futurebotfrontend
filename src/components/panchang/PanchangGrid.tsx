@@ -4,6 +4,7 @@ import type React from "react"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import type { CoreData, Widgets } from "@/types/panchang"
+import { useTranslation } from "react-i18next";
 
 interface PanchangGridProps {
   coreData: CoreData
@@ -11,55 +12,56 @@ interface PanchangGridProps {
 }
 
 const PanchangGrid: React.FC<PanchangGridProps> = ({ coreData, widgets }) => {
+  const { t } = useTranslation();
   return (
     <div className="grid grid-cols-2 gap-4 p-4 -mt-6 z-20 relative">
       <PanchangCard
-        title="Tithi"
-        value={coreData.tithi.name}
-        subValue={`Ends: ${coreData.tithi.ends_at}`}
-        detail={`${coreData.tithi.paksha} Paksha. It determines the daily mood.`}
+        title={t('panchang_grid.tithi', 'Tithi')}
+        value={t('tithis.' + coreData.tithi.name.toLowerCase().split(' ')[0], { defaultValue: coreData.tithi.name })}
+        subValue={`${t('panchang_grid.ends', 'Ends')}: ${coreData.tithi.ends_at}`}
+        detail={`${t('panchang_grid.paksha', 'Paksha')}: ${coreData.tithi.paksha}. ${t('panchang_grid.daily_mood', 'It determines the daily mood.')}`}
       />
 
       <PanchangCard
-        title="Nakshatra"
-        value={coreData.nakshatra.name}
-        subValue={`Ends: ${coreData.nakshatra.ends_at}`}
-        detail="The star constellation the Moon is traveling through."
+        title={t('panchang_grid.nakshatra', 'Nakshatra')}
+        value={t('nakshatras.' + coreData.nakshatra.name.toLowerCase(), { defaultValue: coreData.nakshatra.name })}
+        subValue={`${t('panchang_grid.ends', 'Ends')}: ${coreData.nakshatra.ends_at}`}
+        detail={t('panchang_grid.constellation', 'The star constellation the Moon is traveling through.')}
       />
 
       <PanchangCard
-        title="Yoga"
-        value={coreData.yoga.name}
-        subValue="Daily Luck"
-        detail="Mathematical combination of Sun and Moon affecting outcomes."
+        title={t('panchang_grid.yoga', 'Yoga')}
+        value={t('yogas.' + coreData.yoga.name.toLowerCase(), { defaultValue: coreData.yoga.name })}
+        subValue={t('panchang_grid.daily_luck', 'Daily Luck')}
+        detail={t('panchang_grid.yoga_desc', 'Mathematical combination of Sun and Moon affecting outcomes.')}
       />
 
       <PanchangCard
-        title="Disha Shool"
+        title={t('panchang_grid.disha_shool', 'Disha Shool')}
         value={widgets.disha_shool.direction}
-        subValue="Avoid Travel"
-        detail={`Remedy: ${widgets.disha_shool.remedy}`}
+        subValue={t('panchang_grid.avoid_travel', 'Avoid Travel')}
+        detail={`${t('panchang_grid.remedy', 'Remedy')}: ${widgets.disha_shool.remedy}`}
         isWarning
       />
 
       {/* Special Muhurats */}
       <div className="col-span-2 mt-2">
-        <h3 className="text-violet-300/40 text-xs font-bold uppercase tracking-widest mb-2 pl-1">Special Muhurats</h3>
+        <h3 className="text-violet-200/80 text-xs font-bold uppercase tracking-widest mb-2 pl-1">{t('panchang_grid.special_muhurats', 'Special Muhurats')}</h3>
         <div className="grid grid-cols-2 gap-4">
           <PanchangCard
-            title="Brahma Muhurat"
+            title={t('panchang_grid.brahma', 'Brahma Muhurat')}
             value={widgets.special_muhurats.brahma_muhurat}
-            subValue="Meditation"
-            detail="Best time for spiritual practices."
+            subValue={t('panchang_grid.meditation', 'Meditation')}
+            detail={t('panchang_grid.brahma_desc', 'Best time for spiritual practices.')}
           />
           <PanchangCard
-            title="Abhijit"
+            title={t('panchang_grid.abhijit', 'Abhijit')}
             value={
               widgets.special_muhurats.abhijit_muhurat.start === "N/A"
                 ? "N/A"
                 : `${widgets.special_muhurats.abhijit_muhurat.start} - ${widgets.special_muhurats.abhijit_muhurat.end}`
             }
-            subValue="Victory Time"
+            subValue={t('panchang_grid.victory', 'Victory Time')}
             detail={widgets.special_muhurats.abhijit_muhurat.note}
           />
         </div>
@@ -90,7 +92,7 @@ const PanchangCard: React.FC<{
         className={`absolute top-0 right-0 w-12 h-12 rounded-bl-full opacity-20 blur-sm ${isWarning ? "bg-red-500" : "bg-amber-500"}`}
       />
 
-      <h4 className="text-xs text-violet-300/50 font-bold uppercase tracking-wider mb-1">{title}</h4>
+      <h4 className="text-xs text-violet-200/80 font-bold uppercase tracking-wider mb-1">{title}</h4>
       <div className="text-lg font-semibold text-white truncate">{value}</div>
       <div className={`text-xs mt-1 ${isWarning ? "text-red-400/70" : "text-amber-400/70"}`}>{subValue}</div>
 

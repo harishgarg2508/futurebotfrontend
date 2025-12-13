@@ -8,7 +8,10 @@ interface ChaughadiyaRoadProps {
   onItemClick?: (type: "Hora" | "Chaughadiya", name: string) => void
 }
 
+import { useTranslation } from "react-i18next";
+
 const ChaughadiyaRoad: React.FC<ChaughadiyaRoadProps> = ({ data, horaData, onItemClick }) => {
+  const { t } = useTranslation();
   const [showRoad, setShowRoad] = useState(false)
   const [activeTab, setActiveTab] = useState<"Chaughadiya" | "Hora">("Chaughadiya")
   const activeSlotRef = useRef<HTMLDivElement>(null)
@@ -87,8 +90,8 @@ const ChaughadiyaRoad: React.FC<ChaughadiyaRoadProps> = ({ data, horaData, onIte
 
             {/* Text */}
             <div className="ml-4 flex-1">
-              <div className="text-white font-bold tracking-wide">{data.current.name}</div>
-              <div className="text-xs text-violet-300/60">Ends {data.current.end_time} • Tap for roadmap</div>
+              <div className="text-white font-bold tracking-wide">{t('panchang_page.' + data.current.name.toLowerCase(), { defaultValue: data.current.name })}</div>
+              <div className="text-xs text-violet-300/60">{t('panchang_grid.ends', 'Ends')} {data.current.end_time} • {t('panchang_page.tap_roadmap', 'Tap for roadmap')}</div>
             </div>
 
             <div className="mr-4 text-violet-400/60 animate-cosmic-pulse">
@@ -98,7 +101,7 @@ const ChaughadiyaRoad: React.FC<ChaughadiyaRoadProps> = ({ data, horaData, onIte
             </div>
           </>
         ) : (
-          <div className="p-4 text-violet-300/50 text-sm">Loading Timeline...</div>
+          <div className="p-4 text-violet-300/50 text-sm">{t('panchang_page.loading_timeline', 'Loading Timeline...')}</div>
         )}
       </motion.div>
 
@@ -135,14 +138,14 @@ const ChaughadiyaRoad: React.FC<ChaughadiyaRoadProps> = ({ data, horaData, onIte
                          onClick={() => setActiveTab("Chaughadiya")}
                          className={`pb-2 text-sm font-medium transition-colors relative ${activeTab === 'Chaughadiya' ? 'text-white' : 'text-white/40'}`}
                        >
-                           Chaughadiya
+                           {t('panchang_page.chaughadiya', 'Chaughadiya')}
                            {activeTab === 'Chaughadiya' && <motion.div layoutId="tabLine" className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-400" />}
                        </button>
                        <button 
                          onClick={() => setActiveTab("Hora")}
                          className={`pb-2 text-sm font-medium transition-colors relative ${activeTab === 'Hora' ? 'text-white' : 'text-white/40'}`}
                        >
-                           Hora (Planetary)
+                           {t('panchang_page.hora_planetary', 'Hora (Planetary)')}
                            {activeTab === 'Hora' && <motion.div layoutId="tabLine" className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-400" />}
                        </button>
                    </div>
@@ -203,15 +206,15 @@ const ChaughadiyaRoad: React.FC<ChaughadiyaRoadProps> = ({ data, horaData, onIte
                            <div>
                               <div className="flex items-center gap-2 mb-1">
                                 <span className={`font-bold ${activeTab === 'Hora' ? getHoraText(slot.color) : (isCurrent ? 'text-white' : getSlotTextColor(slot.type))}`}>
-                                    {slot.name}
+                                    {slot.isHora ? t('planets.' + slot.name, slot.name) : t('panchang_page.' + slot.name.toLowerCase(), slot.name)}
                                 </span>
                                 {slot.is_night && (
                                   <span className="text-[9px] uppercase tracking-wider bg-indigo-950 text-indigo-300 px-1.5 py-0.5 rounded border border-indigo-500/20">
-                                    Night
+                                    {t('panchang_page.night', 'Night')}
                                   </span>
                                 )}
                               </div>
-                              <div className="text-xs text-violet-300/50 leading-snug max-w-[200px]">{slot.meaning}</div>
+                              <div className="text-xs text-violet-300/50 leading-snug max-w-[200px]">{slot.isHora ? t('planets.' + slot.name, slot.name) : t('panchang_page.' + slot.name.toLowerCase(), slot.name)}</div>
                            </div>
                            
                            <div className="flex flex-col items-end shrink-0 gap-2">

@@ -14,6 +14,8 @@ interface LocationSearchModalProps {
   currentCity: string
 }
 
+import { useModalBackHandler } from "@/hooks/useModalBackHandler"
+
 const LocationSearchModal: React.FC<LocationSearchModalProps> = ({
   isOpen,
   onClose,
@@ -22,6 +24,7 @@ const LocationSearchModal: React.FC<LocationSearchModalProps> = ({
   currentDate,
   currentCity,
 }) => {
+  useModalBackHandler(isOpen, onClose)
   const [query, setQuery] = useState("")
   const [date, setDate] = useState(currentDate)
   const [results, setResults] = useState<any[]>([])

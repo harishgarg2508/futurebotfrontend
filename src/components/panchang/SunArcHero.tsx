@@ -4,6 +4,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import type { HeroSunArc, CoreData, ChaughadiyaSlot, HoraSlot } from "@/types/panchang"
 import { motion } from "framer-motion"
+import { useTranslation } from "react-i18next";
 
 interface SunArcHeroProps {
   heroData: HeroSunArc
@@ -16,6 +17,7 @@ interface SunArcHeroProps {
 }
 
 const SunArcHero: React.FC<SunArcHeroProps> = ({ heroData, coreData, currentChaughadiya, currentHora, displayDate, onChaughadiyaClick, onHoraClick }) => {
+  const { t } = useTranslation();
   const [currentTime, setCurrentTime] = useState<string>("")
   const [isNight, setIsNight] = useState(false)
 
@@ -262,11 +264,11 @@ const SunArcHero: React.FC<SunArcHeroProps> = ({ heroData, coreData, currentChau
         {/* Arc Labels - Moved down to clear arc ends */}
         <div className="absolute bottom-[-15px] left-[2px] text-xs text-violet-300/50 font-mono flex flex-col items-center leading-none z-30">
             <span className="text-white font-bold mb-1">{heroData.sunrise}</span>
-            <span className="text-amber-400/80 text-[10px]">Sunrise</span>
+            <span className="text-amber-400/80 text-[10px]">{t('panchang_page.sunrise', 'Sunrise')}</span>
         </div>
         <div className="absolute bottom-[-15px] right-[2px] text-xs text-violet-300/50 font-mono flex flex-col items-center leading-none z-30">
             <span className="text-white font-bold mb-1">{heroData.sunset}</span>
-            <span className="text-amber-400/80 text-[10px]">Sunset</span>
+            <span className="text-amber-400/80 text-[10px]">{t('panchang_page.sunset', 'Sunset')}</span>
         </div>
 
         {/* Status Pills Container - Centered Bottom */}
@@ -287,7 +289,7 @@ const SunArcHero: React.FC<SunArcHeroProps> = ({ heroData, coreData, currentChau
                 
                 <span className="text-xs font-bold uppercase tracking-widest whitespace-nowrap">
                     {currentChaughadiya
-                    ? `${currentChaughadiya.name} (${currentChaughadiya.meaning.split(" ")[0]})`
+                    ? `${t('panchang_page.' + currentChaughadiya.name.toLowerCase(), { defaultValue: currentChaughadiya.name })} (${t('panchang_page.' + (currentChaughadiya.type === 'Good' ? 'good' : 'bad'), { defaultValue: currentChaughadiya.meaning })})`
                     : "Calculating..."}
                 </span>
              </motion.div>
@@ -301,13 +303,13 @@ const SunArcHero: React.FC<SunArcHeroProps> = ({ heroData, coreData, currentChau
                     onClick={() => onHoraClick?.(currentHora.planet)}
                     className={`px-4 py-1.5 rounded-full backdrop-blur-md border flex items-center gap-2 cursor-pointer ${getHoraColor(currentHora.color)}`}
                 >
-                     <span className="text-[10px] opacity-70 uppercase tracking-wider">Hora:</span>
+                     <span className="text-[10px] opacity-70 uppercase tracking-wider">{t('panchang_page.hora')}:</span>
                      <span className="text-xs font-bold uppercase tracking-wide">
-                        {currentHora.planet}
+                        {t('planets.' + currentHora.planet, { defaultValue: currentHora.planet })}
                      </span>
                      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-50" />
-                     <span className="text-[10px] italic opacity-80 truncate max-w-[120px]">
-                        {currentHora.type}
+                     <span className="text-[10px] italic opacity-80 whitespace-nowrap">
+                        {t('panchang_page.' + currentHora.type.toLowerCase(), { defaultValue: currentHora.type })}
                      </span>
                 </motion.div>
             )}

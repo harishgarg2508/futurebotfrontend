@@ -8,7 +8,10 @@ interface HoraRoadProps {
   onItemClick?: (planet: string) => void
 }
 
+import { useTranslation } from "react-i18next";
+
 const HoraRoad: React.FC<HoraRoadProps> = ({ data, currentTime, onItemClick }) => {
+  const { t } = useTranslation();
   const [showRoad, setShowRoad] = useState(false)
   const [progress, setProgress] = useState(0)
   const activeSlotRef = useRef<HTMLDivElement>(null)
@@ -100,8 +103,8 @@ const HoraRoad: React.FC<HoraRoadProps> = ({ data, currentTime, onItemClick }) =
 
             {/* Text */}
             <div className="ml-4 flex-1 z-10">
-              <div className="text-white font-bold tracking-wide">{currentHora.planet}</div>
-              <div className="text-xs text-yellow-300/60">Ends {currentHora.end_time} • Tap for roadmap</div>
+              <div className="text-white font-bold tracking-wide">{t('planets.' + currentHora.planet, { defaultValue: currentHora.planet })}</div>
+              <div className="text-xs text-yellow-300/60">{t('panchang_grid.ends', 'Ends')} {currentHora.end_time} • {t('panchang_page.tap_roadmap', 'Tap for roadmap')}</div>
             </div>
 
             <div className="mr-4 text-yellow-400/60 animate-cosmic-pulse z-10">
@@ -111,7 +114,7 @@ const HoraRoad: React.FC<HoraRoadProps> = ({ data, currentTime, onItemClick }) =
             </div>
           </>
         ) : (
-          <div className="p-4 text-yellow-300/50 text-sm">Loading Hora...</div>
+          <div className="p-4 text-yellow-300/50 text-sm">{t('panchang_page.loading_hora', 'Loading Hora...')}</div>
         )}
       </motion.div>
 
@@ -197,15 +200,15 @@ const HoraRoad: React.FC<HoraRoadProps> = ({ data, currentTime, onItemClick }) =
                             <div className="flex items-center gap-2 mb-1">
                               <span className="text-lg">{planetEmoji[slot.planet] || "⭐"}</span>
                               <span className={`font-bold ${getHoraText(slot.color)} ${isCurrent ? 'text-white' : ''}`}>
-                                {slot.planet}
+                                {t('planets.' + slot.planet, slot.planet)}
                               </span>
                               {slot.is_night && (
                                 <span className="text-[9px] uppercase tracking-wider bg-indigo-950 text-indigo-300 px-1.5 py-0.5 rounded border border-indigo-500/20">
-                                  Night
+                                  {t('panchang_page.night', 'Night')}
                                 </span>
                               )}
                             </div>
-                            <div className="text-xs text-yellow-300/50 leading-snug max-w-[200px]">{slot.meaning}</div>
+                            <div className="text-xs text-yellow-300/50 leading-snug max-w-[200px]">{t('planets.' + slot.planet, slot.planet)}</div>
                           </div>
                           
                           <div className="flex flex-col items-end shrink-0 gap-2">

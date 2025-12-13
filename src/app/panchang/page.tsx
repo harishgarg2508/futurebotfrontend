@@ -14,6 +14,10 @@ import { PanchangResponse, HoraSlot } from '@/types/panchang';
 import BenefitDetailsModal from '@/components/panchang/BenefitDetailsModal';
 import { HORA_BENEFITS, CHAUGHADIYA_BENEFITS } from '@/components/panchang/data/benefits';
 import { MapPin, Calendar } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useNotificationOrchestrator } from '@/hooks/useNotificationOrchestrator';
+import { useTranslation } from "react-i18next";
+import { CosmicOrb } from '@/components/ui/CosmicOrb';
 
 // Default Location: New Delhi
 const DEFAULT_LOC = { lat: 28.6139, lon: 77.2090, timezone: "Asia/Kolkata", city: "New Delhi" };
@@ -24,6 +28,8 @@ console.log("🔧 Panchang API URL:", API_URL);
 console.log("🔧 Environment Variable:", process.env.NEXT_PUBLIC_BACKEND_URL);
 
 export default function PanchangPage() {
+  const { t } = useTranslation();
+  const router = useRouter();
   const [data, setData] = useState<PanchangResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -128,12 +134,20 @@ export default function PanchangPage() {
     fetchData();
   }, [location, selectedDate]);
 
+  // 3. The Orchestrator (Runs silently)
+  // 3. The Orchestrator (Runs silently)
+  const { voiceEnabled, toggleVoice, testNotification } = useNotificationOrchestrator(data, selectedDate);
+
+
+
+// In PanchangPage function:
+
   if (loading) {
       return (
-          <div className="min-h-screen bg-[#050505] flex items-center justify-center text-yellow-500">
-              <div className="animate-pulse flex flex-col items-center gap-4">
-                  <div className="w-16 h-16 rounded-full border-4 border-t-transparent border-yellow-500 animate-spin" />
-                  <p className="font-medium tracking-widest uppercase text-sm">Aligning Stars...</p>
+          <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+              <div className="flex flex-col items-center justify-center gap-4">
+                  <CosmicOrb />
+                  <p className="font-light tracking-widest uppercase text-sm text-violet-200/70">{t('panchang_page.aligning', 'Aligning Cosmic Energies...')}</p>
               </div>
           </div>
       );
@@ -143,9 +157,9 @@ export default function PanchangPage() {
       return (
           <div className="min-h-screen bg-[#050505] flex items-center justify-center text-red-500 p-8 text-center">
               <div>
-                  <h1 className="text-2xl font-bold mb-2">Cosmic Alignment Failed</h1>
+                  <h1 className="text-2xl font-bold mb-2">{t('panchang_page.failed', 'Cosmic Alignment Failed')}</h1>
                   <p>{error}</p>
-                  <button onClick={() => window.location.reload()} className="mt-4 px-6 py-2 bg-red-900/30 border border-red-500 rounded-full hover:bg-red-900/50">Retry</button>
+                  <button onClick={() => window.location.reload()} className="mt-4 px-6 py-2 bg-red-900/30 border border-red-500 rounded-full hover:bg-red-900/50">{t('panchang_page.retry', 'Retry')}</button>
               </div>
           </div>
       );
@@ -155,8 +169,18 @@ export default function PanchangPage() {
     <div className="min-h-screen bg-[#050505] text-white pb-20 selection:bg-yellow-500/30 overflow-x-hidden flex flex-col">
         {/* Navigation / Header - Relative to avoid overlap */}
         <div className="w-full p-4 flex justify-between items-center z-50 bg-[#050505]/80 backdrop-blur-sm sticky top-0 border-b border-white/5">
-            <button className="text-white/70 hover:text-white transition-colors flex items-center gap-2" onClick={() => window.history.back()}>
-               <span>←</span> <span className="text-sm font-medium uppercase tracking-wider">Back</span>
+            <button 
+                onClick={() => {
+                    if (window.history.length > 2) {
+                        router.back();
+                    } else {
+                        router.push('/');
+                    }
+                }}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-white/80 hover:text-white"
+            >
+                <span className="text-lg leading-none pb-0.5">←</span> 
+                <span className="text-xs font-medium uppercase tracking-wider">{t('panchang_page.back', 'Back')}</span>
             </button>
             
             {/* Clickable Location/Date Pill */}
@@ -195,6 +219,34 @@ export default function PanchangPage() {
 
         {/* 2. Main Grid */}
         <div className="relative z-20 space-y-2">
+            {/* Voice Alerts Toggle */}
+            <div className="glass-card p-4 flex justify-between items-center mx-4 sm:mx-0">
+                <div>
+                  <h3 className="text-gold font-bold flex items-center gap-2">
+                    <span>🔊</span> {t('panchang_page.voice_alerts', 'Voice Alerts')}
+                  </h3>
+                  <p className="text-xs text-white/50">{t('panchang_page.voice_desc', 'Hear when time changes')}</p>
+                </div>
+                <label className="switch">
+                  <input 
+                    type="checkbox" 
+                    checked={voiceEnabled} 
+                    onChange={(e) => toggleVoice(e.target.checked)} 
+                  />
+                  <span className="slider round"></span>
+                </label>
+            </div>
+            
+            {/* Debug/Test Button (Only visible if dev or requested) */}
+            <div className="flex justify-end px-4 -mt-2 mb-2">
+                <button 
+                    onClick={() => testNotification().then(res => alert(res))}
+                    className="text-[10px] uppercase tracking-wider text-yellow-500/50 hover:text-yellow-500 border border-yellow-500/20 hover:border-yellow-500/50 rounded px-2 py-1 transition-colors"
+                >
+                    {t('panchang_page.test_alert', 'Test Alert (5s)')}
+                </button>
+            </div>
+
             <PanchangGrid 
                 coreData={data.core_data} 
                 widgets={data.widgets} 
@@ -242,7 +294,7 @@ export default function PanchangPage() {
         
         {/* Footer Polish */}
         <div className="text-center text-white/10 text-[10px] pb-8 uppercase tracking-widest">
-            Detailed Calculations by Swiss Ephemeris
+            {t('panchang_page.detailed_calculations', 'Detailed Calculations by Swiss Ephemeris')}
         </div>
 
         {/* Control Modal */}

@@ -26,6 +26,12 @@ export function ServiceIcon({ service, index, onClick, size = "md" }: ServiceIco
     lg: "w-28",
   }
 
+  const textSizes = {
+    sm: "text-[10px]",
+    md: "text-xs md:text-sm",
+    lg: "text-sm",
+  }
+
   const handleClick = () => {
     if (onClick) {
       onClick(service)
@@ -48,6 +54,7 @@ export function ServiceIcon({ service, index, onClick, size = "md" }: ServiceIco
       whileTap={{ scale: 0.95 }}
       onClick={handleClick}
       className={`${containerSizes[size]} flex flex-col items-center gap-2 group cursor-pointer`}
+      type="button"
     >
       {/* Glowing Icon Container */}
       <div className="relative">
@@ -115,7 +122,7 @@ export function ServiceIcon({ service, index, onClick, size = "md" }: ServiceIco
 
       {/* Service name */}
       <motion.span
-        className="text-xs text-slate-300 font-medium text-center group-hover:text-white transition-colors duration-300 leading-tight"
+        className={`${textSizes[size]} text-slate-300 font-bold text-center group-hover:text-white transition-colors duration-300 leading-tight`}
         style={{ textShadow: "0 2px 4px rgba(0,0,0,0.5)" }}
       >
         {service.name}
