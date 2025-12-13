@@ -142,15 +142,13 @@ export default function PanchangPage() {
 
 // In PanchangPage function:
 
+  // Removed redundant loader as per user request. 
+  // We return null or a minimal skeleton if data is missing but loading is true, 
+  // however since the user said "remove the screen", we might just render the layout with empty data or null.
+  // But SunArcHero needs data. 
+  // If we return null, the screen is blank until data arrives.
   if (loading) {
-      return (
-          <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-              <div className="flex flex-col items-center justify-center gap-4">
-                  <CosmicOrb />
-                  <p className="font-light tracking-widest uppercase text-sm text-violet-200/70">{t('panchang_page.aligning', 'Aligning Cosmic Energies...')}</p>
-              </div>
-          </div>
-      );
+      return null; 
   }
 
   if (error || !data) {
@@ -171,8 +169,9 @@ export default function PanchangPage() {
         <div className="w-full p-4 flex justify-between items-center z-50 bg-[#050505]/80 backdrop-blur-sm sticky top-0 border-b border-white/5">
             <button 
                 onClick={() => {
-                    if (window.history.length > 2) {
-                        router.back();
+                    // Try to go back in history if possible
+                    if (window.history.length > 1) {
+                         window.history.back();
                     } else {
                         router.push('/');
                     }
@@ -238,10 +237,10 @@ export default function PanchangPage() {
             </div>
             
             {/* Debug/Test Button (Only visible if dev or requested) */}
-            <div className="flex justify-end px-4 -mt-2 mb-2">
+            <div className="flex justify-end px-4 -mt-2 mb-2 relative z-30">
                 <button 
                     onClick={() => testNotification().then(res => alert(res))}
-                    className="text-[10px] uppercase tracking-wider text-yellow-500/50 hover:text-yellow-500 border border-yellow-500/20 hover:border-yellow-500/50 rounded px-2 py-1 transition-colors"
+                    className="text-[10px] uppercase tracking-wider text-yellow-500/50 hover:text-yellow-500 border border-yellow-500/20 hover:border-yellow-500/50 rounded px-3 py-1.5 transition-colors active:scale-95 touch-manipulation"
                 >
                     {t('panchang_page.test_alert', 'Test Alert (5s)')}
                 </button>

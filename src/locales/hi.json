@@ -125,7 +125,7 @@
         "abhijit": "अभिजीत",
         "victory": "विजय समय"
     },
-    "tithis": {
+    "tithi": {
         "pratipada": "प्रतिपदा",
         "dwitiya": "द्वितीया",
         "tritiya": "तृतीया",
@@ -142,6 +142,11 @@
         "chaturdashi": "चतुर्दशी",
         "purnima": "पूर्णिमा",
         "amavasya": "अमावस्या"
+    },
+    "paksha": {
+        "shukla": "शुक्ल",
+        "krishna": "कृष्ण",
+        "paksha": "पक्ष"
     },
     "nakshatras": {
         "ashwini": "अश्विनी",

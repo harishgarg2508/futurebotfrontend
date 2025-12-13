@@ -17,9 +17,9 @@ const PanchangGrid: React.FC<PanchangGridProps> = ({ coreData, widgets }) => {
     <div className="grid grid-cols-2 gap-4 p-4 -mt-6 z-20 relative">
       <PanchangCard
         title={t('panchang_grid.tithi', 'Tithi')}
-        value={t('tithis.' + coreData.tithi.name.toLowerCase().split(' ')[0], { defaultValue: coreData.tithi.name })}
+        value={t('tithi.' + coreData.tithi.name.toLowerCase().split(' ')[0], { defaultValue: coreData.tithi.name })}
         subValue={`${t('panchang_grid.ends', 'Ends')}: ${coreData.tithi.ends_at}`}
-        detail={`${t('panchang_grid.paksha', 'Paksha')}: ${coreData.tithi.paksha}. ${t('panchang_grid.daily_mood', 'It determines the daily mood.')}`}
+        detail={`${t('panchang_grid.paksha', 'Paksha')}: ${t('paksha.' + coreData.tithi.paksha.toLowerCase(), { defaultValue: coreData.tithi.paksha })}. ${t('panchang_grid.daily_mood', 'It determines the daily mood.')}`}
       />
 
       <PanchangCard

@@ -184,8 +184,10 @@ const SunArcHero: React.FC<SunArcHeroProps> = ({ heroData, coreData, currentChau
             ${isNight ? "bg-gradient-to-r from-indigo-200 to-white" : "bg-gradient-to-r from-amber-200 to-amber-500"}`}>
           {currentTime || "--:--:-- --"}
         </div>
-        <p className="text-sm text-violet-300/60 mt-2 font-medium">
-          {coreData.tithi.name} ({coreData.tithi.paksha})
+        <p className="text-lg text-violet-200 mt-2 font-medium">
+          {t('tithi.' + coreData.tithi.name.toLowerCase().replace(/\s+/g, '_'), { defaultValue: coreData.tithi.name })} (
+          {t('paksha.' + coreData.tithi.paksha?.toLowerCase(), { defaultValue: coreData.tithi.paksha })}{' '}
+          {t('paksha.paksha', 'Paksha')})
         </p>
       </div>
 
