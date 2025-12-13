@@ -85,11 +85,17 @@ export const useNotificationOrchestrator = (
   const [permissions, setPermissions] = useState('prompt');
   const [voiceEnabled, setVoiceEnabled] = useState(true); // User toggle state
 
-  // 1. Permission Checker (Defined first to be available)
+  // 1. Permission Checker
   const checkPermissions = async () => {
     try {
-        const perm = await LocalNotifications.checkPermissions();
-        setPermissions(perm.display);
+        if (Capacitor.getPlatform() === 'web') {
+             if ('Notification' in window) {
+                 setPermissions(Notification.permission === 'granted' ? 'granted' : 'prompt');
+             }
+        } else {
+            const perm = await LocalNotifications.checkPermissions();
+            setPermissions(perm.display);
+        }
     } catch (e) {
         console.error("Error checking permissions", e);
     }
@@ -116,19 +122,24 @@ export const useNotificationOrchestrator = (
         const { value } = await Preferences.get({ key: 'voice_enabled' });
         if (value !== null) setVoiceEnabled(JSON.parse(value));
         
-        // Auto-Request Permissions on Launch
-        let perm = await LocalNotifications.checkPermissions();
-        if (perm.display === 'prompt') {
-            perm = await LocalNotifications.requestPermissions();
-        }
-        setPermissions(perm.display);
-
-        // Debug Listener: Alert when notification received in foreground
+        // Auto-Request Permissions on Launch (Native Only)
+        // Browsers block this without user gesture, so we skip for web.
         if (Capacitor.getPlatform() !== 'web') {
-            LocalNotifications.addListener('localNotificationReceived', (notification) => {
+             let perm = await LocalNotifications.checkPermissions();
+             if (perm.display === 'prompt') {
+                 perm = await LocalNotifications.requestPermissions();
+             }
+             setPermissions(perm.display);
+             
+             // Debug Listener: Alert when notification received in foreground
+             LocalNotifications.addListener('localNotificationReceived', (notification) => {
                 console.log('Notification Received:', notification);
-            });
+             });
+        } else {
+             // For Web, just check status
+             checkPermissions();
         }
+
       } catch (e) {
         console.error("Error initializing notifications", e);
       }
@@ -149,9 +160,13 @@ export const useNotificationOrchestrator = (
         // Request Permission if needed
         if (permissions !== 'granted') {
             try {
-                const req = await LocalNotifications.requestPermissions();
-                if (req.display !== 'granted') return;
-                setPermissions(req.display);
+                // If web, we can't request here (async background). 
+                // We rely on user having clicked "Enable" or "Test" before.
+                if (Capacitor.getPlatform() !== 'web') {
+                    const req = await LocalNotifications.requestPermissions();
+                    if (req.display !== 'granted') return;
+                    setPermissions(req.display);
+                }
             } catch (e) {
                 console.warn("Permission request failed", e);
                 return;
@@ -315,60 +330,90 @@ export const useNotificationOrchestrator = (
     }
   }, [panchangData, voiceEnabled]); 
 
-  // 5. Manual Test Function
+  // 5. Manual Test Function (UPDATED FOR RAHU TEST)
   const testNotification = async () => {
-    let perm = await LocalNotifications.checkPermissions();
-    if (perm.display !== 'granted') {
-        const req = await LocalNotifications.requestPermissions();
-        perm = req;
-    }
-    if (perm.display !== 'granted') {
-        return `❌ Permission Denied (Status: ${perm.display}).`;
-    }
-
-    const now = new Date();
-    const triggerTime = new Date(now.getTime() + 5000); 
-    const testId = 900000 + Math.floor(Math.random() * 10000);
-
-    try {
-        await LocalNotifications.cancel({ notifications: [{ id: 999 }] }).catch(() => {});
-
-        // Re-ensure Channel Exists (Mobile Only)
-        if (Capacitor.getPlatform() === 'android') {
-             await LocalNotifications.createChannel({
-                id: VOICE_CHANNEL_ID,
-                name: 'Astro Voice Alerts',
-                description: 'Voice notifications for Hora and Chaughadiya',
-                importance: 5, 
-                sound: 'voice_success.wav',
-                visibility: 1,
-                vibration: true,
-            }).catch(e => console.error("Channel Ensure Failed", e));
+    // A. WEB / PWA PATH (Uses standard Notification API)
+    if (Capacitor.getPlatform() === 'web') {
+        if (!('Notification' in window)) return alert("This browser does not support notifications.");
+        
+        let p = Notification.permission;
+        if (p !== 'granted') {
+            try {
+                p = await Notification.requestPermission();
+            } catch (err) {
+                console.error("Permission Request Error:", err);
+            }
+        }
+        if (p !== 'granted') {
+            return alert("❌ Permission Blocked. Please check browser privacy settings for this site.");
         }
 
-        // TEST ABHIJEET SOUND & BANNER
+        // Permissions Good. Trigger Test.
         const assets = getNotificationAssets('Abhijeet Test', 'abhijeet');
         const testSound = assets.sound; // 'abhijeet_muhurt.mp3'
-        const testBanner = assets.banner; // Platform-specific banner handled in helper
- 
-        if (Capacitor.getPlatform() === 'web') {
-            setTimeout(() => {
-                new Notification("Test Abhijeet Alert " + new Date().toLocaleTimeString(), {
-                    body: "✨ Abhijeet Muhurat Begins! Best time for success.",
-                    icon: '/icons/icon-192x192.png',
-                    image: testBanner, 
-                    requireInteraction: true,
-                    silent: true
-                } as NotificationOptions & { image?: string });
-                if (voiceEnabled) playWebSound(testSound);
-            }, 5000);
-            return "✅ Scheduled Abhijeet Test! (Waits 5s)";
-        } else {
+
+        // 1. Unlock Audio (immediately)
+        if (voiceEnabled) {
+             // Play immediately to ensure context is active
+             playWebSound(testSound);
+        }
+
+        // 2. Schedule Notification (simulated delay)
+        setTimeout(() => {
+            const n = new Notification("Test Abhijeet Alert " + new Date().toLocaleTimeString(), {
+                body: "✨ Abhijeet Muhurat Begins! Best time for success.",
+                icon: '/icons/icon-192x192.png',
+                image: assets.banner, 
+                requireInteraction: true,
+                silent: true
+            } as NotificationOptions & { image?: string });
+            
+            n.onclick = () => { window.focus(); n.close(); };
+        }, 5000);
+
+        return "✅ PWA Notification Scheduled! (Wait 5s)";
+    } 
+    
+    // B. NATIVE PATH (Android/iOS via Capacitor)
+    else {
+        let perm = await LocalNotifications.checkPermissions();
+        if (perm.display !== 'granted') {
+            const req = await LocalNotifications.requestPermissions();
+            perm = req;
+        }
+        if (perm.display !== 'granted') {
+            return `❌ Permission Denied (Status: ${perm.display}).`;
+        }
+
+        const now = new Date();
+        const triggerTime = new Date(now.getTime() + 5000); 
+        const testId = 900000 + Math.floor(Math.random() * 10000);
+
+        try {
+            await LocalNotifications.cancel({ notifications: [{ id: 999 }] }).catch(() => {});
+
+            // Re-ensure Channel Exists (Mobile Only)
+            if (Capacitor.getPlatform() === 'android') {
+                 await LocalNotifications.createChannel({
+                    id: VOICE_CHANNEL_ID,
+                    name: 'Astro Voice Alerts',
+                    description: 'Voice notifications for Hora and Chaughadiya',
+                    importance: 5, 
+                    sound: 'voice_success.wav',
+                    visibility: 1,
+                    vibration: true,
+                }).catch(e => console.error("Channel Ensure Failed", e));
+            }
+
+            const assets = getNotificationAssets('Abhijeet Test', 'abhijeet');
+            const testSound = assets.sound; 
+            const testBanner = assets.banner; 
+
             const scheduleResult = await LocalNotifications.schedule({
                 notifications: [{
                     id: testId,
-                    title: "Test Abhijeet Alert",
-                    body: "✨ Abhijeet Muhurat Begins! Best time for success.",
+                    title: "Test Native Alert",
+                    body: "✨ Abhijeet Native Notification Test",
                     schedule: { at: triggerTime, allowWhileIdle: true },
                     channelId: VOICE_CHANNEL_ID,
                     sound: testSound,
@@ -379,12 +424,12 @@ export const useNotificationOrchestrator = (
                 }]
             });
             console.log("Schedule Result:", scheduleResult);
-            return "✅ Scheduled Native Abhijeet Test! Watch notification tray in 5s.";
+            return "✅ Scheduled Native Test! Watch notification tray in 5s.";
+
+        } catch (e: any) {
+            console.error("Test Schedule Failed:", e);
+            throw new Error(`Schedule Failed: ${e.message}`);
         }
-    } catch (e: any) {
-        console.error("Test Schedule Failed:", e);
-        // Return error string to be alerted by the UI
-        throw new Error(`Schedule Failed: ${e.message}`);
     }
   };
 
