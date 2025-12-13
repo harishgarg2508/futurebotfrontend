@@ -209,7 +209,7 @@ const CareerDashboard = () => {
   // 1. Fetch Profiles
   useEffect(() => {
     const fetchProfiles = async () => {
-      if (!user) return
+      if (!user || !db) return
       try {
         const querySnapshot = await getDocs(collection(db, "users", user.uid, "profiles"))
         const data = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as unknown as Profile[]

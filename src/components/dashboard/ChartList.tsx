@@ -20,7 +20,7 @@ const ChartList: React.FC<ChartListProps> = ({ onSelectChart, onNewChart }) => {
 
   useEffect(() => {
     const fetchCharts = async () => {
-      if (!user) return
+      if (!user || !db) return
       try {
         const querySnapshot = await getDocs(collection(db, "users", user.uid, "profiles"))
         const chartsData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))

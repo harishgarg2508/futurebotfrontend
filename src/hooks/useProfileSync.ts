@@ -13,7 +13,7 @@ export function useProfileSync() {
 
   // Sync Profiles from Firebase
   useEffect(() => {
-    if (!user) return;
+    if (!user || !db) return;
 
     const q = query(
       collection(db, 'users', user.uid, 'profiles'), 

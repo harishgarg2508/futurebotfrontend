@@ -13,7 +13,7 @@ export function useChatSync() {
 
   // Sync Chat History for Current Profile
   useEffect(() => {
-    if (!user || !currentProfile) {
+    if (!user || !currentProfile || !db) {
       setChatHistory([]);
       return;
     }

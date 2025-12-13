@@ -5,6 +5,7 @@ import { ChartProfile, Message } from '@/lib/store';
 
 // Profile Actions
 export async function addProfileToFirebase(uid: string, profile: ChartProfile) {
+  if (!db) return;
   console.log("Saving profile to Firebase:", profile);
   await setDoc(doc(db, 'users', uid, 'profiles', profile.id), {
     id: profile.id,
@@ -18,11 +19,13 @@ export async function addProfileToFirebase(uid: string, profile: ChartProfile) {
 }
 
 export async function removeProfileFromFirebase(uid: string, profileId: string) {
+  if (!db) return;
   await deleteDoc(doc(db, 'users', uid, 'profiles', profileId));
 }
 
 // Chat Actions
 export async function sendMessageToFirebase(uid: string, profileId: string, message: Message) {
+  if (!db) return;
   // Use setDoc to use the client-generated ID
   await setDoc(doc(db, 'users', uid, 'profiles', profileId, 'chats', message.id), {
     role: message.role,
