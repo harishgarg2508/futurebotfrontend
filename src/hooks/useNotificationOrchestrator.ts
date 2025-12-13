@@ -325,6 +325,19 @@ export const useNotificationOrchestrator = (
     try {
         await LocalNotifications.cancel({ notifications: [{ id: 999 }] }).catch(() => {});
 
+        // Re-ensure Channel Exists (Mobile Only)
+        if (Capacitor.getPlatform() === 'android') {
+             await LocalNotifications.createChannel({
+                id: VOICE_CHANNEL_ID,
+                name: 'Astro Voice Alerts',
+                description: 'Voice notifications for Hora and Chaughadiya',
+                importance: 5, 
+                sound: 'voice_success.wav',
+                visibility: 1,
+                vibration: true,
+            }).catch(e => console.error("Channel Ensure Failed", e));
+        }
+
         // TEST ABHIJEET SOUND & BANNER
         const assets = getNotificationAssets('Abhijeet Test', 'abhijeet');
         const testSound = assets.sound; // 'abhijeet_muhurt.mp3'
@@ -343,12 +356,12 @@ export const useNotificationOrchestrator = (
             }, 5000);
             return "✅ Scheduled Abhijeet Test! (Waits 5s)";
         } else {
-            await LocalNotifications.schedule({
+            const scheduleResult = await LocalNotifications.schedule({
                 notifications: [{
                     id: testId,
                     title: "Test Abhijeet Alert",
                     body: "✨ Abhijeet Muhurat Begins! Best time for success.",
-                    schedule: { at: triggerTime },
+                    schedule: { at: triggerTime, allowWhileIdle: true },
                     channelId: VOICE_CHANNEL_ID,
                     sound: testSound,
                     smallIcon: 'ic_stat_sun', 
@@ -357,11 +370,13 @@ export const useNotificationOrchestrator = (
                     extra: { type: 'test_abhijeet' }
                 }]
             });
-            return "✅ Scheduled Native Abhijeet Test!";
+            console.log("Schedule Result:", scheduleResult);
+            return "✅ Scheduled Native Abhijeet Test! Watch notification tray in 5s.";
         }
     } catch (e: any) {
         console.error("Test Schedule Failed:", e);
-        return `❌ Schedule Failed: ${e.message}`;
+        // Return error string to be alerted by the UI
+        throw new Error(`Schedule Failed: ${e.message}`);
     }
   };
 
