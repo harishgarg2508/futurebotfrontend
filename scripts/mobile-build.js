@@ -15,14 +15,20 @@ async function build() {
             await fs.remove(NEXT_DIR);
         }
 
-        // 1. Temporarily rename 'api' folder to exclude from static export
+        // 1. Clean up any leftover _api_mobile_ignored folder from failed builds
+        if (fs.existsSync(TEMP_API_DIR)) {
+            console.log('🧹 Mobile Build: Removing leftover temporary API folder...');
+            await fs.remove(TEMP_API_DIR);
+        }
+
+        // 2. Temporarily rename 'api' folder to exclude from static export
         if (fs.existsSync(API_DIR)) {
             console.log('📦 Mobile Build: Hiding API routes...');
             await fs.move(API_DIR, TEMP_API_DIR);
             renamed = true;
         }
 
-        // 2. Run Next.js Build
+        // 3. Run Next.js Build
         console.log('🚀 Mobile Build: Starting Next.js build...');
         // Pass IS_MOBILE_BUILD=true to enable static export in next.config.ts
         execSync('next build --webpack', {
@@ -30,11 +36,11 @@ async function build() {
             env: { ...process.env, IS_MOBILE_BUILD: 'true' }
         });
 
-        // 3. Run Sound Copy
+        // 4. Run Sound Copy
         console.log('🔊 Mobile Build: Copying sounds...');
         require('./copy-sounds');
 
-        // 3b. Ensure Platforms Exist
+        // 5. Ensure Platforms Exist
         const ANDROID_DIR = path.join(process.cwd(), 'android');
         const IOS_DIR = path.join(process.cwd(), 'ios');
 
@@ -48,7 +54,7 @@ async function build() {
             execSync('npx cap add ios', { stdio: 'inherit' });
         }
 
-        // 4. Capacitor Sync
+        // 6. Capacitor Sync
         console.log('📱 Mobile Build: Syncing Capacitor...');
         // We need to run npx cap sync. 
         // If ios/android folders exist, it syncs.
@@ -60,9 +66,13 @@ async function build() {
         console.error('❌ Mobile Build Failed:', err);
         process.exit(1);
     } finally {
-        // 5. Restore API folder
+        // 7. Restore API folder
         if (renamed && fs.existsSync(TEMP_API_DIR)) {
             console.log('📦 Mobile Build: Restoring API routes...');
+            // Remove existing api folder if it exists (shouldn't happen, but just in case)
+            if (fs.existsSync(API_DIR)) {
+                await fs.remove(API_DIR);
+            }
             await fs.move(TEMP_API_DIR, API_DIR);
         }
     }
