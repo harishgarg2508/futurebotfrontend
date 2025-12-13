@@ -19,6 +19,16 @@ const nextConfig: NextConfig = {
   
   // Turbopack configuration
   turbopack: {},
+  
+  // Skip trailing slash for export to avoid _not-found issues
+  trailingSlash: true,
+  
+  // Optimize for static export
+  ...(process.env.IS_MOBILE_BUILD === 'true' && {
+    images: {
+      unoptimized: true,
+    },
+  }),
 
 };
 
