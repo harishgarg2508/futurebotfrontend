@@ -1,4 +1,4 @@
-import backendClient from '@/lib/backendClient';
+import axios from 'axios';
 
 export interface TransitData {
   date: string;
@@ -12,7 +12,7 @@ export interface TransitData {
 
 export const getTransits = async (data: TransitData) => {
   try {
-    const response = await backendClient.post('/calculate/transits', {
+    const response = await axios.post('/api/transits', {
       ...data,
       years: data.years || 1.0,
       include_moon: data.include_moon !== undefined ? data.include_moon : true,

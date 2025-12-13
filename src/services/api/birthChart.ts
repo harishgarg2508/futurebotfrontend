@@ -1,4 +1,4 @@
-import backendClient from '@/lib/backendClient';
+import axios from 'axios';
 
 export interface BirthChartData {
   date: string;
@@ -21,7 +21,7 @@ export const getBirthChart = async (data: BirthChartData) => {
 
   console.log("Calling Birth Chart API with:", data);
   try {
-    const response = await backendClient.post('/calculate/chart', {
+    const response = await axios.post('/api/birth-chart', {
       ...data,
       timezone: data.timezone || 'Asia/Kolkata',
     });

@@ -59,8 +59,8 @@ export const fetchMatchMaking = createAsyncThunk(
     }
 
     try {
-      // Using Hugging Face URL
-      const response = await axios.post('https://harishgarg2508-vedic-engine.hf.space/calculate/matchmaking', payload);
+      // Using API proxy route
+      const response = await axios.post('/api/matchmaking', payload);
       
       if (typeof window !== 'undefined') {
         localStorage.setItem(cacheKey, JSON.stringify(response.data))

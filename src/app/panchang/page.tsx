@@ -21,11 +21,6 @@ import { CosmicOrb } from '@/components/ui/CosmicOrb';
 
 // Default Location: New Delhi
 const DEFAULT_LOC = { lat: 28.6139, lon: 77.2090, timezone: "Asia/Kolkata", city: "New Delhi" };
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://harishgarg2508-vedic-engine.hf.space";
-
-// Debug: Log the API URL on component load
-console.log("🔧 Panchang API URL:", API_URL);
-console.log("🔧 Environment Variable:", process.env.NEXT_PUBLIC_BACKEND_URL);
 
 export default function PanchangPage() {
   const { t } = useTranslation();
@@ -106,11 +101,10 @@ export default function PanchangPage() {
   useEffect(() => {
     // 2. Fetch Panchang Data
     async function fetchData() {
-       console.log("Fetching Panchang from:", API_URL); // Debug Log
        if (!selectedDate) return; // Prevent fetching with empty date
        setLoading(true);
        try {
-           const res = await fetch(`${API_URL}/panchang/analyze`, {
+           const res = await fetch('/api/panchang/analyze', {
                method: 'POST',
                headers: { 'Content-Type': 'application/json' },
                body: JSON.stringify({

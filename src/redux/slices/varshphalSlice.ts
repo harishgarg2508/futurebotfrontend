@@ -66,8 +66,8 @@ export const fetchVarshphal = createAsyncThunk(
     }
 
     try {
-      // Using Hugging Face URL
-      const response = await axios.post('https://harishgarg2508-vedic-engine.hf.space/calculate/varshaphala', {
+      // Using API proxy route
+      const response = await axios.post('/api/varshaphala', {
         ...payload,
         timezone: payload.timezone || 'Asia/Kolkata'
       });

@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
-import backendClient from '@/lib/backendClient';
 import { RootState } from '../store';
 
 // Types
@@ -65,8 +64,8 @@ export const fetchCareerPrediction = createAsyncThunk(
     }
 
     try {
-      // Call backend directly
-      const response = await backendClient.post('/predict/career', {
+      // Call Next.js API route (BFF proxy)
+      const response = await axios.post('/api/career/predict', {
         date,
         time,
         lat,

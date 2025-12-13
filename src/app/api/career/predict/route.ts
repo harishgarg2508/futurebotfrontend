@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
-import axios from 'axios';
-
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://harishgarg2508-vedic-engine.hf.space';
+import backendClient from '@/lib/backendClient';
 
 export async function POST(req: NextRequest) {
     try {
@@ -19,7 +17,7 @@ export async function POST(req: NextRequest) {
         }
 
         // 1. Call Python Backend
-        const pythonResponse = await axios.post(`${BACKEND_URL}/predict/career`, {
+        const pythonResponse = await backendClient.post('/predict/career', {
             date,
             time,
             lat,

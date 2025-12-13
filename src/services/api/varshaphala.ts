@@ -1,4 +1,4 @@
-import backendClient from '@/lib/backendClient';
+import axios from 'axios';
 
 export interface VarshaphalaData {
   date: string;
@@ -10,7 +10,7 @@ export interface VarshaphalaData {
 
 export const getVarshaphala = async (data: VarshaphalaData) => {
   try {
-    const response = await backendClient.post('/calculate/varshaphala', data);
+    const response = await axios.post('/api/varshaphala', data);
     return response.data;
   } catch (error) {
     console.error('Error fetching varshaphala:', error);
