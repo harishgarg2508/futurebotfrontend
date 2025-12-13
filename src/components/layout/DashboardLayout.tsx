@@ -8,9 +8,10 @@ import { useProfileSync } from "@/hooks/useProfileSync"
 import { LanguageToggle } from "@/components/ui/LanguageToggle"
 import "@/lib/i18n"
 import { motion, AnimatePresence } from "framer-motion"
-import { PanelRightOpen, PanelLeftOpen, X } from "lucide-react"
+import { PanelRightOpen, PanelLeftOpen, X, LogOut } from "lucide-react"
 import { ServicesGrid } from "@/components/services/ServicesGrid"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/context/AuthContext"
 
 interface DashboardLayoutProps {
   defaultView?: 'services' | 'chat'
@@ -24,6 +25,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ defaultView = 
   const [isRightOpen, setIsRightOpen] = React.useState(false)
   const [isMobile, setIsMobile] = React.useState(true)
   const [view, setView] = React.useState<'services' | 'chat'>(defaultView)
+  const { logout } = useAuth()
+
+  const handleLogout = async () => {
+      await logout()
+      window.location.href = '/'
+  }
 
   // Check if we're on desktop and set initial state
   React.useEffect(() => {
@@ -133,14 +140,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ defaultView = 
 
       {/* CENTER COLUMN: Oracle or Services */}
       <main className="flex-1 flex flex-col min-w-0 min-h-0 relative z-10">
-        {/* Left Toggle Button - Only visible when sidebar is closed */}
+        {/* Left Toggle & Logout - Only visible when sidebar is closed */}
         <AnimatePresence>
           {!isLeftOpen && (
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="absolute top-4 left-4 z-50"
+              className="absolute top-4 left-4 z-50 flex gap-2"
             >
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -149,6 +156,16 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ defaultView = 
                 className="p-3 bg-gradient-to-r from-violet-600 to-purple-600 backdrop-blur-xl border border-violet-400/30 rounded-xl text-white hover:from-violet-500 hover:to-purple-500 transition-all shadow-lg shadow-violet-500/30"
               >
                 <PanelLeftOpen size={18} />
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleLogout}
+                className="p-3 bg-rose-500/20 backdrop-blur-xl border border-rose-400/30 rounded-xl text-rose-300 hover:bg-rose-500/40 hover:text-white transition-all shadow-lg shadow-rose-500/10"
+                title="Sign Out"
+              >
+                <LogOut size={18} />
               </motion.button>
             </motion.div>
           )}

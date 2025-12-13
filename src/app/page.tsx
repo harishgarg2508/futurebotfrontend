@@ -63,18 +63,23 @@ export default function Home() {
         if (!user) {
             await signInWithGoogle()
         }
+        // Only advance if login didn't throw (user signed in)
         setPhase("awakening")
         setTimeout(() => setPhase("dashboard"), 2500)
     } catch (error) {
-        console.error(error)
+        console.error("Login cancelled or failed", error)
+        // Stay on login step so user can try again
     }
   }
   
   const handleDirectLogin = async () => {
     try {
         await signInWithGoogle()
+        // Success! Enter the app
+        setPhase("awakening")
+        setTimeout(() => setPhase("dashboard"), 2500)
     } catch (error) {
-        console.error(error)
+        console.error("Direct login failed", error)
     }
   } 
   if (loading) {
