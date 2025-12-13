@@ -82,8 +82,8 @@ const getNotificationAssets = (name: string, type: string) => {
 };
 
 export const useNotificationOrchestrator = (
-  panchangData: any,   // The JSON data from your engine
-  selectedDate: string // "2025-12-13" (The date user is viewing)
+  panchangData?: any,   // Optional
+  selectedDate?: string // Optional
 ) => {
   const [permissions, setPermissions] = useState('prompt');
   const [voiceEnabled, setVoiceEnabled] = useState(true); // User toggle state

@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import "@/lib/i18n"
 
+import { useNotificationOrchestrator } from "@/hooks/useNotificationOrchestrator"
 import { LanguageToggle } from "@/components/ui/LanguageToggle"
 import "@/lib/i18n"
 
@@ -27,6 +28,9 @@ type Phase = "landing" | "name" | "date" | "time" | "location" | "login" | "awak
 export default function Home() {
   const { t } = useTranslation()
   const { user, signInWithGoogle, loading } = useAuth()
+  // Global Notification Permission Hook
+  const { showPermissionBanner, requestWebPermissions, dismissPermissionBanner } = useNotificationOrchestrator();
+
   const { setCurrentProfile, setChartData } = useAppStore()
   const [phase, setPhase] = useState<Phase>("landing")
   const [dashboardView, setDashboardView] = useState<'services' | 'chat'>('services')
@@ -234,6 +238,31 @@ export default function Home() {
         {/* Dashboard */}
         {phase === "dashboard" && <DashboardLayout defaultView={dashboardView} />}
       </AnimatePresence>
+      {/* Global Permission Banner (PWA) */}
+      {showPermissionBanner && (
+          <div className="fixed bottom-0 left-0 right-0 z-[100] p-4 bg-[#0A0A0A] border-t border-white/10 shadow-2xl animate-slide-up">
+              <div className="max-w-md mx-auto flex items-center justify-between gap-4">
+                  <div className="flex-1">
+                      <h4 className="text-sm font-bold text-white mb-1">🔔 {t('panchang_page.enable_nots', 'Enable Daily Alerts?')}</h4>
+                      <p className="text-xs text-white/60">{t('panchang_page.enable_nots_desc', 'Get notified for Shubh Muhurat & Rahu Kaal.')}</p>
+                  </div>
+                  <div className="flex gap-2">
+                       <button 
+                          onClick={dismissPermissionBanner}
+                          className="text-xs text-white/40 px-3 py-2 hover:text-white transition-colors"
+                       >
+                          {t('common.later', 'Later')}
+                       </button>
+                       <button 
+                          onClick={requestWebPermissions}
+                          className="text-xs font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/50 px-4 py-2 rounded-lg hover:bg-yellow-500/30 transition-all active:scale-95"
+                       >
+                          {t('common.allow', 'Allow')}
+                       </button>
+                  </div>
+              </div>
+          </div>
+      )}
     </main>
   )
 }
