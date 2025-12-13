@@ -19,18 +19,35 @@ export default function NotificationSettingsPage() {
   const [preferences, setPreferences] = useState<NotificationPreferences>(DEFAULT_NOTIFICATION_PREFERENCES);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  
+  // Location state
+  const [location, setLocation] = useState({ 
+    lat: 28.6139, 
+    lon: 77.2090, 
+    timezone: 'Asia/Kolkata', 
+    city: 'New Delhi' 
+  });
+  const [detectingLocation, setDetectingLocation] = useState(false);
 
-  // Load preferences on mount
+  // Load preferences and location on mount
   useEffect(() => {
     const loadPreferences = async () => {
       try {
+        // Load notification preferences
         const { value } = await Preferences.get({ key: 'notification_preferences' });
         if (value) {
           const loaded = JSON.parse(value);
           setPreferences({ ...DEFAULT_NOTIFICATION_PREFERENCES, ...loaded });
         }
+        
+        // Load saved location
+        const { value: locValue } = await Preferences.get({ key: 'user_location' });
+        if (locValue) {
+          const savedLocation = JSON.parse(locValue);
+          setLocation(savedLocation);
+        }
       } catch (e) {
-        console.error('Failed to load notification preferences', e);
+        console.error('Failed to load preferences', e);
       } finally {
         setLoading(false);
       }
@@ -41,44 +58,53 @@ export default function NotificationSettingsPage() {
   // Test notification function
   const testNotification = async () => {
     try {
-      const { LocalNotifications } = await import('@capacitor/local-notifications');
       const { Capacitor } = await import('@capacitor/core');
+      const platform = Capacitor.getPlatform();
       
-      if (Capacitor.getPlatform() === 'web') {
+      if (platform === 'web') {
+        // PWA/Web Platform
         if (!('Notification' in window)) {
-          alert('❌ Notifications not supported in this browser');
+          alert('❌ Notifications not supported in this browser.\n\nTry Chrome, Edge, or Firefox.');
           return;
         }
         
         let perm = Notification.permission;
-        if (perm !== 'granted') {
+        console.log('Current permission:', perm);
+        
+        if (perm === 'default') {
+          alert('📢 Requesting notification permission...\n\nClick "Allow" in the browser prompt.');
           perm = await Notification.requestPermission();
+          console.log('New permission:', perm);
         }
         
-        if (perm === 'granted') {
-          alert('✅ Test notification will appear in 3 seconds!');
-          setTimeout(() => {
-            new Notification('🌟 Test Notification', {
-              body: 'Your notifications are working perfectly!',
-              icon: '/icons/icon-192x192.png',
-              badge: '/icons/icon-192x192.png'
-            });
-          }, 3000);
-        } else {
-          alert('❌ Permission denied. Enable notifications in browser settings.');
+        if (perm !== 'granted') {
+          alert('❌ Notification permission denied.\n\n1. Click the lock icon in address bar\n2. Allow notifications\n3. Refresh page and try again');
+          return;
         }
+        
+        // Show immediate notification (PWA can't schedule background notifications)
+        alert('✅ Showing notification NOW!\n\n⚠️ PWA Limitation: Background scheduled notifications require native mobile app.\n\nFor full notification scheduling, install as APK from:\nnpm run build:mobile');
+        
+        new Notification('🌟 Test Notification - PWA', {
+          body: 'Instant notification works! For scheduled notifications, install native app.',
+          icon: '/icons/icon-192x192.png',
+          badge: '/icons/icon-192x192.png',
+          requireInteraction: true
+        });
       } else {
-        // Native test
+        // Native Mobile App
+        const { LocalNotifications } = await import('@capacitor/local-notifications');
         const perm = await LocalNotifications.checkPermissions();
+        
         if (perm.display !== 'granted') {
           const req = await LocalNotifications.requestPermissions();
           if (req.display !== 'granted') {
-            alert('❌ Permission not granted. Enable notifications in device settings.');
+            alert('❌ Permission not granted.\n\nGo to device Settings → Apps → FutureBot → Notifications → Enable');
             return;
           }
         }
         
-        const testTime = new Date(Date.now() + 15000); // 15 seconds from now
+        const testTime = new Date(Date.now() + 15000);
         await LocalNotifications.schedule({
           notifications: [{
             id: 999998,
@@ -90,11 +116,57 @@ export default function NotificationSettingsPage() {
             channelId: 'astro_voice_alerts'
           }]
         });
-        alert('✅ Test notification scheduled in 15 seconds! Keep app in background.');
+        alert('✅ Native app test scheduled in 15 seconds!\n\nKeep app in background and wait.');
       }
     } catch (e: any) {
-      alert('❌ Test failed: ' + e.message);
+      alert('❌ Test failed: ' + e.message + '\n\nCheck console for details.');
       console.error('Test notification error:', e);
+    }
+  };
+
+  // Detect current GPS location
+  const detectLocation = async () => {
+    setDetectingLocation(true);
+    try {
+      if (!navigator.geolocation) {
+        alert('❌ Geolocation not supported by your browser');
+        setDetectingLocation(false);
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const newLocation = {
+            lat: position.coords.latitude,
+            lon: position.coords.longitude,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            city: 'Current Location'
+          };
+          
+          // Try to get city name from reverse geocoding
+          try {
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${newLocation.lat}&lon=${newLocation.lon}&format=json`
+            );
+            const data = await response.json();
+            newLocation.city = data.address?.city || data.address?.town || data.address?.village || 'Current Location';
+          } catch (e) {
+            console.warn('Failed to get city name:', e);
+          }
+          
+          setLocation(newLocation);
+          setDetectingLocation(false);
+          alert(`✅ Location detected: ${newLocation.city}`);
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          alert('❌ Failed to detect location. Please enable location permissions.');
+          setDetectingLocation(false);
+        }
+      );
+    } catch (e) {
+      console.error('Error detecting location:', e);
+      setDetectingLocation(false);
     }
   };
 
@@ -102,9 +174,16 @@ export default function NotificationSettingsPage() {
   const savePreferences = async () => {
     setSaving(true);
     try {
+      // Save notification preferences
       await Preferences.set({ 
         key: 'notification_preferences', 
         value: JSON.stringify(preferences) 
+      });
+      
+      // Save location
+      await Preferences.set({ 
+        key: 'user_location', 
+        value: JSON.stringify(location) 
       });
       
       // Initialize auto-scheduler - this will schedule midnight refresh
@@ -277,6 +356,93 @@ export default function NotificationSettingsPage() {
       </div>
 
       <div className="pt-6 pb-10">
+        {/* Location Section */}
+        <div className="mb-6 mx-4">
+          <div className="glass-card p-4">
+            <h2 className="text-sm font-bold text-yellow-400 mb-2 flex items-center gap-2">
+              📍 Notification Location
+            </h2>
+            <p className="text-xs text-white/50 mb-3">
+              Notifications are scheduled based on this location's Panchang timings
+            </p>
+            
+            {/* Current Location Display */}
+            <div className="bg-white/5 border border-white/10 rounded-lg p-3 mb-3">
+              <div className="text-sm font-semibold text-white">{location.city}</div>
+              <div className="text-xs text-white/50 mt-1">
+                {location.lat.toFixed(4)}°N, {location.lon.toFixed(4)}°E
+              </div>
+              <div className="text-xs text-white/40 mt-1">{location.timezone}</div>
+            </div>
+            
+            {/* Location Actions */}
+            <button
+              onClick={detectLocation}
+              disabled={detectingLocation}
+              className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 rounded-lg hover:from-blue-400 hover:to-cyan-400 active:scale-95 transition-all shadow-lg disabled:opacity-50"
+            >
+              {detectingLocation ? '🔍 Detecting...' : '📍 Use Current GPS Location'}
+            </button>
+            
+            <div className="mt-2 text-xs text-center text-white/40">
+              Or change location in Panchang page
+            </div>
+          </div>
+        </div>
+
+        {/*       <option key={sound} value={sound} className="bg-[#1a1a1a] text-white">
+                    {sound.replace(/\.(mp3|wav)$/, '').replace(/_/g, ' ')}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="text-yellow-500 text-sm">Loading settings...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#050505] text-white pb-20">
+      {/* Header */}
+      <div className="sticky top-0 z-50 bg-[#050505]/95 backdrop-blur-sm border-b border-white/10">
+        <div className="flex items-center justify-between p-4">
+          <button 
+            onClick={() => router.back()}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+          >
+            <ChevronLeft size={16} />
+            <span className="text-xs font-medium uppercase tracking-wider">Back</span>
+          </button>
+          
+          <h1 className="text-lg font-bold flex items-center gap-2">
+            <Bell size={20} className="text-yellow-500" />
+            Notification Settings
+          </h1>
+          
+          <button 
+            onClick={savePreferences}
+            disabled={saving}
+            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+              saving 
+                ? 'bg-green-500/50 text-white cursor-not-allowed' 
+                : 'bg-yellow-500 text-black hover:bg-yellow-400 active:scale-95'
+            }`}
+          >
+            {saving ? '✓ Saved' : 'Save'}
+          </button>
+        </div>
+      </div>
+
+      <div className="pt-6 pb-10">
         {/* Test Notification */}
         <div className="mb-6 mx-4">
           <div className="glass-card p-4 bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-2 border-purple-500/30">
@@ -296,25 +462,42 @@ export default function NotificationSettingsPage() {
               <button
                 onClick={async () => {
                   try {
-                    const { LocalNotifications } = await import('@capacitor/local-notifications');
                     const { Capacitor } = await import('@capacitor/core');
+                    const platform = Capacitor.getPlatform();
                     
-                    if (Capacitor.getPlatform() === 'web') {
-                      alert('⚠️ Scheduled notifications check only available on mobile app');
+                    if (platform === 'web') {
+                      const perm = Notification.permission;
+                      alert(`📱 You're using PWA (Web App)\n\n` +
+                        `Permission: ${perm}\n\n` +
+                        `⚠️ PWA LIMITATION:\n` +
+                        `- Can't schedule background notifications\n` +
+                        `- Can only show instant notifications\n` +
+                        `- Can't check scheduled queue\n\n` +
+                        `✅ SOLUTION:\n` +
+                        `Install native Android/iOS app:\n` +
+                        `npm run build:mobile → APK/IPA`);
                       return;
                     }
                     
+                    const { LocalNotifications } = await import('@capacitor/local-notifications');
                     const pending = await LocalNotifications.getPending();
+                    
                     if (pending.notifications.length === 0) {
-                      alert('📭 No notifications scheduled.\n\nTip: Save your preferences first, then open Panchang page to schedule notifications.');
+                      alert('📭 No notifications scheduled.\n\n' +
+                        'Steps to schedule:\n' +
+                        '1. Save your preferences here\n' +
+                        '2. Open Panchang page once\n' +
+                        '3. Notifications auto-schedule daily');
                     } else {
                       const list = pending.notifications
-                        .map((n, i) => `${i + 1}. ${n.title} (ID: ${n.id})`)
-                        .join('\n');
+                        .slice(0, 10) // Show first 10
+                        .map((n, i) => `${i + 1}. ${n.title}\n   ID: ${n.id}`)
+                        .join('\n\n');
                       alert(`📬 ${pending.notifications.length} notifications scheduled:\n\n${list}`);
                     }
                   } catch (e: any) {
                     alert('❌ Error: ' + e.message);
+                    console.error('Queue check error:', e);
                   }
                 }}
                 className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 rounded-lg hover:from-blue-400 hover:to-cyan-400 active:scale-95 transition-all shadow-lg"
@@ -495,6 +678,7 @@ export default function NotificationSettingsPage() {
           backdrop-filter: blur(10px);
         }
       `}</style>
+      </div>
     </div>
   );
 }
