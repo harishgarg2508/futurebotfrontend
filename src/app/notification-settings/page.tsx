@@ -38,6 +38,66 @@ export default function NotificationSettingsPage() {
     loadPreferences();
   }, []);
 
+  // Test notification function
+  const testNotification = async () => {
+    try {
+      const { LocalNotifications } = await import('@capacitor/local-notifications');
+      const { Capacitor } = await import('@capacitor/core');
+      
+      if (Capacitor.getPlatform() === 'web') {
+        if (!('Notification' in window)) {
+          alert('❌ Notifications not supported in this browser');
+          return;
+        }
+        
+        let perm = Notification.permission;
+        if (perm !== 'granted') {
+          perm = await Notification.requestPermission();
+        }
+        
+        if (perm === 'granted') {
+          alert('✅ Test notification will appear in 3 seconds!');
+          setTimeout(() => {
+            new Notification('🌟 Test Notification', {
+              body: 'Your notifications are working perfectly!',
+              icon: '/icons/icon-192x192.png',
+              badge: '/icons/icon-192x192.png'
+            });
+          }, 3000);
+        } else {
+          alert('❌ Permission denied. Enable notifications in browser settings.');
+        }
+      } else {
+        // Native test
+        const perm = await LocalNotifications.checkPermissions();
+        if (perm.display !== 'granted') {
+          const req = await LocalNotifications.requestPermissions();
+          if (req.display !== 'granted') {
+            alert('❌ Permission not granted. Enable notifications in device settings.');
+            return;
+          }
+        }
+        
+        const testTime = new Date(Date.now() + 15000); // 15 seconds from now
+        await LocalNotifications.schedule({
+          notifications: [{
+            id: 999998,
+            title: '🌟 Test Notification',
+            body: 'Your notifications are working perfectly!',
+            schedule: { at: testTime, allowWhileIdle: true },
+            sound: preferences.rahuKaalStart.sound,
+            smallIcon: 'ic_launcher',
+            channelId: 'astro_voice_alerts'
+          }]
+        });
+        alert('✅ Test notification scheduled in 15 seconds! Keep app in background.');
+      }
+    } catch (e: any) {
+      alert('❌ Test failed: ' + e.message);
+      console.error('Test notification error:', e);
+    }
+  };
+
   // Save preferences
   const savePreferences = async () => {
     setSaving(true);
@@ -217,6 +277,53 @@ export default function NotificationSettingsPage() {
       </div>
 
       <div className="pt-6 pb-10">
+        {/* Test Notification */}
+        <div className="mb-6 mx-4">
+          <div className="glass-card p-4 bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-2 border-purple-500/30">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h2 className="text-sm font-bold text-purple-300 mb-1">🧪 Test Notifications</h2>
+                <p className="text-xs text-white/50">Verify notifications work (15 sec delay)</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={testNotification}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 rounded-lg hover:from-purple-400 hover:to-pink-400 active:scale-95 transition-all shadow-lg"
+              >
+                🔔 Test Alert
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const { LocalNotifications } = await import('@capacitor/local-notifications');
+                    const { Capacitor } = await import('@capacitor/core');
+                    
+                    if (Capacitor.getPlatform() === 'web') {
+                      alert('⚠️ Scheduled notifications check only available on mobile app');
+                      return;
+                    }
+                    
+                    const pending = await LocalNotifications.getPending();
+                    if (pending.notifications.length === 0) {
+                      alert('📭 No notifications scheduled.\n\nTip: Save your preferences first, then open Panchang page to schedule notifications.');
+                    } else {
+                      const list = pending.notifications
+                        .map((n, i) => `${i + 1}. ${n.title} (ID: ${n.id})`)
+                        .join('\n');
+                      alert(`📬 ${pending.notifications.length} notifications scheduled:\n\n${list}`);
+                    }
+                  } catch (e: any) {
+                    alert('❌ Error: ' + e.message);
+                  }
+                }}
+                className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 rounded-lg hover:from-blue-400 hover:to-cyan-400 active:scale-95 transition-all shadow-lg"
+              >
+                📋 Check Queue
+              </button>
+            </div>
+          </div>
+        </div>
         {/* Rahu Kaal Section */}
         <SettingSection title="Rahu Kaal" icon="⚠️">
           <SettingRow 

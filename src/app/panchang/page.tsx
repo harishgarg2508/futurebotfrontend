@@ -74,50 +74,30 @@ export default function PanchangPage() {
   }, []);
 
   useEffect(() => {
-    // 1. Get User Location and save it
-    const initLocation = async () => {
-      const { Preferences } = await import('@capacitor/preferences');
-      
-      // Try to get saved location first
-      const { value: savedLoc } = await Preferences.get({ key: 'user_location' });
-      if (savedLoc) {
-        const parsedLoc = JSON.parse(savedLoc);
-        setLocation(parsedLoc);
-        console.log('📍 Using saved location:', parsedLoc.city);
-      }
-      
-      // If default location, try to get current GPS location
-      if (navigator.geolocation && location.lat === DEFAULT_LOC.lat && location.lon === DEFAULT_LOC.lon) {
-         navigator.geolocation.getCurrentPosition(
-           async (pos) => {
-               const newLocation = {
-                  lat: pos.coords.latitude, 
-                  lon: pos.coords.longitude,
-                  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                  city: "Current Location"
-               };
-               setLocation(newLocation);
-               
-               // Save location for auto-scheduler
-               await Preferences.set({ 
-                 key: 'user_location', 
-                 value: JSON.stringify(newLocation) 
-               });
-               console.log('📍 GPS location saved:', newLocation);
-           },
-           async (err) => {
-               console.warn("GPS failed, saving default location:", err);
-               // Save default location if GPS fails
-               await Preferences.set({ 
-                 key: 'user_location', 
-                 value: JSON.stringify(DEFAULT_LOC) 
-               });
-           }
-         );
-      }
-    };
-    
-    initLocation();
+    // 1. Get User Location (Only on mount if default)
+    if (navigator.geolocation && location.lat === DEFAULT_LOC.lat && location.lon === DEFAULT_LOC.lon) {
+       navigator.geolocation.getCurrentPosition(
+         async (pos) => {
+             const newLocation = {
+                lat: pos.coords.latitude, 
+                lon: pos.coords.longitude,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                city: "Current Location"
+             };
+             setLocation(newLocation);
+             
+             // Save location for auto-scheduler
+             const { Preferences } = await import('@capacitor/preferences');
+             await Preferences.set({ 
+               key: 'user_location', 
+               value: JSON.stringify(newLocation) 
+             });
+         },
+         (err) => {
+             console.warn("Geolocation failed, using default:", err);
+         }
+       );
+    }
     
     // Check if we need to refresh notifications (web fallback)
     const checkNotifications = async () => {
@@ -158,6 +138,8 @@ export default function PanchangPage() {
   }, [location, selectedDate]);
 
   // 3. The Orchestrator (Runs silently)
+  // 3. The Orchestrator (Runs silently)
+  // 3. The Orchestrator (Runs silently)
   const { 
       voiceEnabled, 
       toggleVoice, 
@@ -166,26 +148,6 @@ export default function PanchangPage() {
       requestWebPermissions, 
       dismissPermissionBanner 
   } = useNotificationOrchestrator(data, selectedDate);
-  
-  // 4. Auto-schedule notifications when panchang data is loaded
-  useEffect(() => {
-    const autoSchedule = async () => {
-      if (!data) return;
-      
-      // Check if user has saved preferences
-      const { Preferences } = await import('@capacitor/preferences');
-      const { value } = await Preferences.get({ key: 'notification_preferences' });
-      
-      if (value) {
-        // User has preferences, schedule notifications automatically
-        console.log('📅 Auto-scheduling notifications with saved preferences...');
-        const { initializeNotificationScheduler } = await import('@/services/notificationScheduler');
-        await initializeNotificationScheduler();
-      }
-    };
-    
-    autoSchedule();
-  }, [data]);
 
 
 
