@@ -15,9 +15,10 @@ import BenefitDetailsModal from '@/components/panchang/BenefitDetailsModal';
 import { HORA_BENEFITS, CHAUGHADIYA_BENEFITS } from '@/components/panchang/data/benefits';
 import { MapPin, Calendar } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useNotificationOrchestrator } from '@/hooks/useNotificationOrchestrator';
+import { useNotificationOrchestrator } from '@/hooks/useNotificationOrchestratorV2';
 import { useTranslation } from "react-i18next";
 import { CosmicOrb } from '@/components/ui/CosmicOrb';
+import { Settings } from 'lucide-react';
 
 // Default Location: New Delhi
 const DEFAULT_LOC = { lat: 28.6139, lon: 77.2090, timezone: "Asia/Kolkata", city: "New Delhi" };
@@ -74,28 +75,36 @@ export default function PanchangPage() {
 
   useEffect(() => {
     // 1. Get User Location (Only on mount if default)
-    // We only auto-detect if user hasn't manually set it? 
-    // actually StepLocation logic is good but here we just align with defaults.
-    // Let's run once.
     if (navigator.geolocation && location.lat === DEFAULT_LOC.lat && location.lon === DEFAULT_LOC.lon) {
        navigator.geolocation.getCurrentPosition(
          async (pos) => {
-            // Reverse Geocode for City Name? Optional but good for UI.
-            // For now, keep simple or fetch from OSM reverse like StepLocation did. 
-            // Let's just update Lat/Lon and keep "Detected Location" or empty city.
-             setLocation(prev => ({
-                ...prev,
+             const newLocation = {
                 lat: pos.coords.latitude, 
                 lon: pos.coords.longitude,
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 city: "Current Location"
-            }));
+             };
+             setLocation(newLocation);
+             
+             // Save location for auto-scheduler
+             const { Preferences } = await import('@capacitor/preferences');
+             await Preferences.set({ 
+               key: 'user_location', 
+               value: JSON.stringify(newLocation) 
+             });
          },
          (err) => {
              console.warn("Geolocation failed, using default:", err);
          }
        );
     }
+    
+    // Check if we need to refresh notifications (web fallback)
+    const checkNotifications = async () => {
+      const { checkAndRefreshIfNeeded } = await import('@/services/notificationScheduler');
+      await checkAndRefreshIfNeeded();
+    };
+    checkNotifications();
   }, []);
 
   useEffect(() => {
@@ -220,22 +229,33 @@ export default function PanchangPage() {
 
         {/* 2. Main Grid */}
         <div className="relative z-20 space-y-2">
-            {/* Voice Alerts Toggle */}
-            <div className="glass-card p-4 flex justify-between items-center mx-4 sm:mx-0">
-                <div>
-                  <h3 className="text-gold font-bold flex items-center gap-2">
-                    <span>🔊</span> {t('panchang_page.voice_alerts', 'Voice Alerts')}
-                  </h3>
-                  <p className="text-xs text-white/50">{t('panchang_page.voice_desc', 'Hear when time changes')}</p>
+            {/* Voice Alerts Toggle with Settings Button */}
+            <div className="glass-card p-4 mx-4 sm:mx-0">
+                <div className="flex justify-between items-center">
+                    <div className="flex-1">
+                      <h3 className="text-gold font-bold flex items-center gap-2">
+                        <span>🔊</span> {t('panchang_page.voice_alerts', 'Voice Alerts')}
+                      </h3>
+                      <p className="text-xs text-white/50">{t('panchang_page.voice_desc', 'Hear when time changes')}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => router.push('/notification-settings')}
+                            className="p-2 rounded-lg bg-white/5 border border-white/20 hover:bg-white/10 hover:border-yellow-500/50 transition-all active:scale-95"
+                            title="Notification Settings"
+                        >
+                            <Settings size={18} className="text-yellow-500" />
+                        </button>
+                        <label className="switch">
+                          <input 
+                            type="checkbox" 
+                            checked={voiceEnabled} 
+                            onChange={(e) => toggleVoice(e.target.checked)} 
+                          />
+                          <span className="slider round"></span>
+                        </label>
+                    </div>
                 </div>
-                <label className="switch">
-                  <input 
-                    type="checkbox" 
-                    checked={voiceEnabled} 
-                    onChange={(e) => toggleVoice(e.target.checked)} 
-                  />
-                  <span className="slider round"></span>
-                </label>
             </div>
             
             {/* Debug/Test Button (Only visible if dev or requested) */}
