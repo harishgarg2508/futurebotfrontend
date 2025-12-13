@@ -112,7 +112,8 @@ const SunArcHero: React.FC<SunArcHeroProps> = ({ heroData, coreData, currentChau
   const cx = 100 + r * Math.cos(angleRad)
   const cy = 100 - r * Math.sin(angleRad)
   const sunLeft = (cx / 200) * 100
-  const sunTop = (cy / 100) * 100
+  // ViewBox height is 110, so divide by 110 for accurate %
+  const sunTop = (cy / 110) * 100 
 
   // Colors
   const getPillColor = () => {
@@ -208,7 +209,7 @@ const SunArcHero: React.FC<SunArcHeroProps> = ({ heroData, coreData, currentChau
          )}
 
          {/* Arc Track - Always Visible */}
-         <svg className="absolute inset-0 w-full h-full overflow-visible" viewBox="0 0 200 110">
+         <svg className="absolute inset-0 w-full h-full overflow-visible" viewBox="0 0 200 110" preserveAspectRatio="none">
             <defs>
             {/* Solid Line, 3 Colors: Violet -> Amber -> Violet */}
             <linearGradient id="arcGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -258,14 +259,14 @@ const SunArcHero: React.FC<SunArcHeroProps> = ({ heroData, coreData, currentChau
             </motion.div>
         )}
 
-        {/* Arc Labels */}
-        <div className="absolute bottom-[-10px] left-[-40px] md:left-[-60px] text-xs text-violet-300/50 font-mono flex flex-col items-center">
-            <span className="text-amber-400/80 mb-1">Sunrise</span>
-            {heroData.sunrise}
+        {/* Arc Labels - Moved down to clear arc ends */}
+        <div className="absolute bottom-[-15px] left-[2px] text-xs text-violet-300/50 font-mono flex flex-col items-center leading-none z-30">
+            <span className="text-white font-bold mb-1">{heroData.sunrise}</span>
+            <span className="text-amber-400/80 text-[10px]">Sunrise</span>
         </div>
-        <div className="absolute bottom-[-10px] right-[-40px] md:right-[-60px] text-xs text-violet-300/50 font-mono flex flex-col items-center">
-            <span className="text-amber-400/80 mb-1">Sunset</span>
-            {heroData.sunset}
+        <div className="absolute bottom-[-15px] right-[2px] text-xs text-violet-300/50 font-mono flex flex-col items-center leading-none z-30">
+            <span className="text-white font-bold mb-1">{heroData.sunset}</span>
+            <span className="text-amber-400/80 text-[10px]">Sunset</span>
         </div>
 
         {/* Status Pills Container - Centered Bottom */}
