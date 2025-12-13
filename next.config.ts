@@ -17,10 +17,8 @@ const nextConfig: NextConfig = {
   // For Vercel/Web, we use default output to support API routes and Image Optimization
   output: process.env.IS_MOBILE_BUILD === 'true' ? 'export' : undefined,
   
-  // Exclude API routes from static export (they don't work in mobile anyway)
-  ...(process.env.IS_MOBILE_BUILD === 'true' && {
-    // This will be handled by the build script cleaning up the routes
-  }),
+  // Turbopack configuration
+  turbopack: {},
 
 };
 
