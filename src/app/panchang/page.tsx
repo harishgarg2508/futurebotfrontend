@@ -136,7 +136,15 @@ export default function PanchangPage() {
 
   // 3. The Orchestrator (Runs silently)
   // 3. The Orchestrator (Runs silently)
-  const { voiceEnabled, toggleVoice, testNotification } = useNotificationOrchestrator(data, selectedDate);
+  // 3. The Orchestrator (Runs silently)
+  const { 
+      voiceEnabled, 
+      toggleVoice, 
+      testNotification, 
+      showPermissionBanner, 
+      requestWebPermissions, 
+      dismissPermissionBanner 
+  } = useNotificationOrchestrator(data, selectedDate);
 
 
 
@@ -317,6 +325,32 @@ export default function PanchangPage() {
             name={benefitModal.name}
             data={benefitModal.data}
         />
+
+        {/* PWA Permission Prompt Banner */}
+        {showPermissionBanner && (
+            <div className="fixed bottom-0 left-0 right-0 z-[100] p-4 bg-[#0A0A0A] border-t border-white/10 shadow-2xl animate-slide-up">
+                <div className="max-w-md mx-auto flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                        <h4 className="text-sm font-bold text-white mb-1">🔔 {t('panchang_page.enable_nots', 'Enable Daily Alerts?')}</h4>
+                        <p className="text-xs text-white/60">{t('panchang_page.enable_nots_desc', 'Get notified for Shubh Muhurat & Rahu Kaal.')}</p>
+                    </div>
+                    <div className="flex gap-2">
+                         <button 
+                            onClick={dismissPermissionBanner}
+                            className="text-xs text-white/40 px-3 py-2 hover:text-white transition-colors"
+                         >
+                            {t('common.later', 'Later')}
+                         </button>
+                         <button 
+                            onClick={requestWebPermissions}
+                            className="text-xs font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/50 px-4 py-2 rounded-lg hover:bg-yellow-500/30 transition-all active:scale-95"
+                         >
+                            {t('common.allow', 'Allow')}
+                         </button>
+                    </div>
+                </div>
+            </div>
+        )}
     </div>
   );
 }

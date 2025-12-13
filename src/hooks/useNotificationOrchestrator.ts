@@ -9,7 +9,6 @@ const VOICE_CHANNEL_ID = 'astro_voice_alerts';
 // Helper to play sound on Web/Desktop
 const playWebSound = (filename: string) => {
     if (Capacitor.getPlatform() === 'web') {
-        // Sounds are in public/sounds, so we reference them relative to root
         try {
             const audio = new Audio(`/sounds/${filename}`);
             audio.play().catch(e => console.warn("Web Audio Blocked:", e));
@@ -19,7 +18,7 @@ const playWebSound = (filename: string) => {
     }
 };
 
-// Helper to map names to assets (User can customize this)
+// Helper to map names to assets
 const getNotificationAssets = (name: string, type: string) => { 
     // Detect Mobile: Either native platform OR web with small screen
     const isNative = Capacitor.getPlatform() !== 'web';
@@ -66,12 +65,12 @@ const getNotificationAssets = (name: string, type: string) => {
         // Good Types
         if (type === 'good' || ['shubh', 'labh', 'amrit', 'char'].some(k => lowerName.includes(k))) {
             assets.banner = prefix + 'green.png';
-            assets.sound = 'laabh_bela.mp3'; // "Laabh Bela"
+            assets.sound = 'laabh_bela.mp3';
         } 
         // Bad Types
         else if (type === 'bad' || ['rog', 'kaal', 'udveg'].some(k => lowerName.includes(k))) {
             assets.banner = prefix + 'red.png';
-            assets.sound = 'rog_bela.mp3'; // "Rog Bela"
+            assets.sound = 'rog_bela.mp3';
         } else {
             // Fallback
             assets.banner = prefix + 'green.png';
@@ -88,13 +87,20 @@ export const useNotificationOrchestrator = (
 ) => {
   const [permissions, setPermissions] = useState('prompt');
   const [voiceEnabled, setVoiceEnabled] = useState(true); // User toggle state
+  const [showPermissionBanner, setShowPermissionBanner] = useState(false); // NEW: State for PWA banner
 
   // 1. Permission Checker
   const checkPermissions = async () => {
     try {
         if (Capacitor.getPlatform() === 'web') {
              if ('Notification' in window) {
-                 setPermissions(Notification.permission === 'granted' ? 'granted' : 'prompt');
+                 const status = Notification.permission;
+                 setPermissions(status === 'granted' ? 'granted' : 'prompt');
+                 
+                 // Show banner if default (never asked)
+                 if (status === 'default') {
+                     setShowPermissionBanner(true);
+                 }
              }
         } else {
             const perm = await LocalNotifications.checkPermissions();
@@ -161,11 +167,9 @@ export const useNotificationOrchestrator = (
             return; 
         }
 
-        // Request Permission if needed
+        // Request Permission if needed (Native Only Check)
         if (permissions !== 'granted') {
             try {
-                // If web, we can't request here (async background). 
-                // We rely on user having clicked "Enable" or "Test" before.
                 if (Capacitor.getPlatform() !== 'web') {
                     const req = await LocalNotifications.requestPermissions();
                     if (req.display !== 'granted') return;
@@ -334,35 +338,34 @@ export const useNotificationOrchestrator = (
     }
   }, [panchangData, voiceEnabled]); 
 
-  // 5. Manual Test Function (UPDATED FOR RAHU TEST)
+  // 5. Manual Test Function
   const testNotification = async () => {
-    // A. WEB / PWA PATH (Uses standard Notification API)
+    // A. WEB / PWA PATH
     if (Capacitor.getPlatform() === 'web') {
         if (!('Notification' in window)) return alert("This browser does not support notifications.");
         
+        // Wait for permission if not granted
         let p = Notification.permission;
         if (p !== 'granted') {
-            try {
+             try {
                 p = await Notification.requestPermission();
-            } catch (err) {
-                console.error("Permission Request Error:", err);
-            }
+                setPermissions(p === 'granted' ? 'granted' : 'prompt');
+                if (p === 'granted') setShowPermissionBanner(false);
+             } catch (err) {
+                console.error("Permission error", err);
+             }
         }
+        
         if (p !== 'granted') {
-            return alert("❌ Permission Blocked. Please check browser privacy settings for this site.");
+            return alert("❌ Permission Blocked. Check browser settings.");
         }
 
-        // Permissions Good. Trigger Test.
         const assets = getNotificationAssets('Abhijeet Test', 'abhijeet');
-        const testSound = assets.sound; // 'abhijeet_muhurt.mp3'
+        const testSound = assets.sound; 
+        
+        // Play sound immediately (User Gesture Context)
+        if (voiceEnabled) playWebSound(testSound);
 
-        // 1. Unlock Audio (immediately)
-        if (voiceEnabled) {
-             // Play immediately to ensure context is active
-             playWebSound(testSound);
-        }
-
-        // 2. Schedule Notification (simulated delay)
         setTimeout(async () => {
             const title = "Test Abhijeet Alert " + new Date().toLocaleTimeString();
             const options: any = {
@@ -373,7 +376,7 @@ export const useNotificationOrchestrator = (
                 silent: false 
             };
 
-            // Try Service Worker First (Best for PWA)
+            // Try Service Worker First
             if ('serviceWorker' in navigator) {
                 try {
                     const reg = await navigator.serviceWorker.getRegistration();
@@ -386,7 +389,7 @@ export const useNotificationOrchestrator = (
                 }
             }
 
-            // Fallback to standard API
+            // Fallback
             const n = new Notification(title, options);
             n.onclick = () => { window.focus(); n.close(); };
         }, 5000);
@@ -394,7 +397,7 @@ export const useNotificationOrchestrator = (
         return "✅ PWA Notification Scheduled! (Wait 5s)";
     } 
     
-    // B. NATIVE PATH (Android/iOS via Capacitor)
+    // B. NATIVE PATH
     else {
         let perm = await LocalNotifications.checkPermissions();
         if (perm.display !== 'granted') {
@@ -412,7 +415,7 @@ export const useNotificationOrchestrator = (
         try {
             await LocalNotifications.cancel({ notifications: [{ id: 999 }] }).catch(() => {});
 
-            // Re-ensure Channel Exists (Mobile Only)
+            // Re-ensure Channel
             if (Capacitor.getPlatform() === 'android') {
                  await LocalNotifications.createChannel({
                     id: VOICE_CHANNEL_ID,
@@ -426,9 +429,6 @@ export const useNotificationOrchestrator = (
             }
 
             const assets = getNotificationAssets('Abhijeet Test', 'abhijeet');
-            const testSound = assets.sound; 
-            const testBanner = assets.banner; 
-
             const scheduleResult = await LocalNotifications.schedule({
                 notifications: [{
                     id: testId,
@@ -436,9 +436,9 @@ export const useNotificationOrchestrator = (
                     body: "✨ Abhijeet Native Notification Test",
                     schedule: { at: triggerTime, allowWhileIdle: true },
                     channelId: VOICE_CHANNEL_ID,
-                    sound: testSound,
+                    sound: assets.sound,
                     smallIcon: 'ic_launcher', 
-                    largeIcon: testBanner,
+                    largeIcon: assets.banner,
                     actionTypeId: 'OPEN_PANCHANG',
                     extra: { type: 'test_abhijeet' }
                 }]
@@ -453,5 +453,34 @@ export const useNotificationOrchestrator = (
     }
   };
 
-  return { permissions, requestPermissions: LocalNotifications.requestPermissions, toggleVoice, voiceEnabled, testNotification };
+  // 6. Web Permission Request Handler
+  const requestWebPermissions = async () => {
+      if ('Notification' in window) {
+          try {
+              const p = await Notification.requestPermission();
+              setPermissions(p === 'granted' ? 'granted' : 'prompt');
+              if (p === 'granted') {
+                  setShowPermissionBanner(false);
+                  scheduleDailyHabit();
+              }
+          } catch (e) {
+              console.error("Permission Request Error", e);
+          }
+      }
+  };
+  
+  const dismissPermissionBanner = () => {
+      setShowPermissionBanner(false);
+  };
+
+  return { 
+      permissions, 
+      requestPermissions: LocalNotifications.requestPermissions, 
+      toggleVoice, 
+      voiceEnabled, 
+      testNotification,
+      showPermissionBanner,
+      requestWebPermissions,
+      dismissPermissionBanner
+  };
 };
