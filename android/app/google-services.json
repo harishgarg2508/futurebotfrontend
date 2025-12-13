@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "843337574138",
+    "project_id": "futurebot-55235",
+    "storage_bucket": "futurebot-55235.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:843337574138:android:1d7bb187b492688dfe8b43",
+        "android_client_info": {
+          "package_name": "com.billiondollar.astro"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "843337574138-274i9qc95upjl6130osr0u8et2ru37q3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDm3a3ql91oIyrr6tyVa6GMs92uMdspD9o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "843337574138-274i9qc95upjl6130osr0u8et2ru37q3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
