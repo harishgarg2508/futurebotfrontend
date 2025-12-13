@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "843337574138-pekfgiqqe46df5c0sl5ffrf2mjllljjv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.billiondollar.astro",
+            "certificate_hash": "bb0dac74d321e14307719b6290afa1666e445d75"
+          }
+        },
+        {
           "client_id": "843337574138-274i9qc95upjl6130osr0u8et2ru37q3.apps.googleusercontent.com",
           "client_type": 3
         }
