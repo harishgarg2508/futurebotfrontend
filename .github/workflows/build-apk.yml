@@ -1,0 +1,58 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch: # Manual trigger
+  push:
+    branches:
+      - master
+    paths:
+      - 'android/**'
+      - 'src/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Build mobile app
+        run: npm run build:mobile
+      
+      - name: Build Android APK
+        working-directory: ./android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+      
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+      
+      - name: Create Release
+        if: github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: FutureBot v1.0.${{ github.run_number }}
+          files: android/app/build/outputs/apk/debug/app-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
