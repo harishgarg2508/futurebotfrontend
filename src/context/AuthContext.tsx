@@ -1,6 +1,8 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { auth, googleProvider } from '@/lib/firebase';
-import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { signInWithPopup, signInWithCredential, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { Capacitor } from '@capacitor/core';
 
 interface AuthContextType {
   user: User | null;
@@ -27,6 +29,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
+    // Initialize Google Auth for native platforms
+    if (Capacitor.isNativePlatform()) {
+      GoogleAuth.initialize({
+        clientId: '843337574138-274i9qc95upjl6130osr0u8et2ru37q3.apps.googleusercontent.com',
+        scopes: ['profile', 'email'],
+        grantOfflineAccess: true,
+      });
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
@@ -39,8 +50,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.warn('Firebase not initialized');
       return;
     }
-    // Let the caller handle errors
-    await signInWithPopup(auth, googleProvider);
+
+    try {
+      // Check if running on native platform
+      if (Capacitor.isNativePlatform()) {
+        // Use Capacitor Google Auth for native platforms
+        const googleUser = await GoogleAuth.signIn();
+        const credential = GoogleAuthProvider.credential(googleUser.authentication.idToken);
+        await signInWithCredential(auth, credential);
+      } else {
+        // Use popup for web
+        await signInWithPopup(auth, googleProvider);
+      }
+    } catch (error) {
+      console.error('Google Sign-In error:', error);
+      throw error;
+    }
   };
 
   const logout = async () => {
