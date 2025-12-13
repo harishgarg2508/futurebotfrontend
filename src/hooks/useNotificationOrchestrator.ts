@@ -7,13 +7,9 @@ import { Capacitor } from '@capacitor/core';
 const VOICE_CHANNEL_ID = 'astro_voice_alerts';
 
 // Helper to play sound on Web/Desktop
-
-
-// Helper to play sound on Web/Desktop
 const playWebSound = (filename: string) => {
     if (Capacitor.getPlatform() === 'web') {
         // Sounds are in public/sounds, so we reference them relative to root
-        // Note: 'voice_success.wav' -> '/sounds/voice_success.wav'
         try {
             const audio = new Audio(`/sounds/${filename}`);
             audio.play().catch(e => console.warn("Web Audio Blocked:", e));
@@ -40,7 +36,7 @@ const getNotificationAssets = (name: string, type: string) => {
     // --- 1. SPECIAL EVENTS ---
     if (type === 'rahu') {
         assets.banner = prefix + 'rahu.png';
-        assets.sound = 'rahu_kaal.mp3'; // FIXED: use rahu_kaal.mp3
+        assets.sound = 'rahu_kaal.mp3'; 
     } else if (type === 'abhijeet') {
         assets.banner = prefix + 'abhijeet.png';
         assets.sound = 'abhijeet_muhurt.mp3';
@@ -89,7 +85,17 @@ export const useNotificationOrchestrator = (
   const [permissions, setPermissions] = useState('prompt');
   const [voiceEnabled, setVoiceEnabled] = useState(true); // User toggle state
 
-  // 1. Initial Setup: Create Channel & Load Preferences
+  // 1. Permission Checker (Defined first to be available)
+  const checkPermissions = async () => {
+    try {
+        const perm = await LocalNotifications.checkPermissions();
+        setPermissions(perm.display);
+    } catch (e) {
+        console.error("Error checking permissions", e);
+    }
+  };
+
+  // 2. Initial Setup: Create Channel & Load Preferences
   useEffect(() => {
     const init = async () => {
       try {
@@ -110,23 +116,25 @@ export const useNotificationOrchestrator = (
         const { value } = await Preferences.get({ key: 'voice_enabled' });
         if (value !== null) setVoiceEnabled(JSON.parse(value));
         
-        checkPermissions();
+        // Auto-Request Permissions on Launch
+        let perm = await LocalNotifications.checkPermissions();
+        if (perm.display === 'prompt') {
+            perm = await LocalNotifications.requestPermissions();
+        }
+        setPermissions(perm.display);
+
+        // Debug Listener: Alert when notification received in foreground
+        if (Capacitor.getPlatform() !== 'web') {
+            LocalNotifications.addListener('localNotificationReceived', (notification) => {
+                console.log('Notification Received:', notification);
+            });
+        }
       } catch (e) {
         console.error("Error initializing notifications", e);
       }
     };
     init();
   }, []);
-
-  // 2. Permission Checker
-  const checkPermissions = async () => {
-    try {
-        const perm = await LocalNotifications.checkPermissions();
-        setPermissions(perm.display);
-    } catch (e) {
-        console.error("Error checking permissions", e);
-    }
-  };
 
   // 3. The Scheduling Logic
   const scheduleDailyHabit = async () => {
@@ -192,7 +200,7 @@ export const useNotificationOrchestrator = (
                         schedule: { at: triggerTime },
                         channelId: VOICE_CHANNEL_ID,
                         sound: finalSound, 
-                        smallIcon: Capacitor.getPlatform() === 'web' ? assets.icon : 'ic_stat_sun',
+                        smallIcon: Capacitor.getPlatform() === 'web' ? assets.icon : 'ic_launcher',
                         largeIcon: assets.banner,
                         attachments: Capacitor.getPlatform() === 'web' && assets.banner ? [{ id: 'image', url: assets.banner }] : undefined,
                         actionTypeId: 'OPEN_PANCHANG',
@@ -217,7 +225,7 @@ export const useNotificationOrchestrator = (
                      schedule: { at: startT },
                      channelId: VOICE_CHANNEL_ID,
                      sound: 'voice_warning.wav',
-                     smallIcon: Capacitor.getPlatform() === 'web' ? assets.icon : 'ic_stat_sun',
+                     smallIcon: Capacitor.getPlatform() === 'web' ? assets.icon : 'ic_launcher',
                      largeIcon: assets.banner,
                      attachments: [{ id: 'image', url: assets.banner }],
                      extra: { type: 'rahu', banner: assets.banner }
@@ -231,7 +239,7 @@ export const useNotificationOrchestrator = (
                      schedule: { at: endT },
                      channelId: VOICE_CHANNEL_ID,
                      sound: 'voice_success.wav',
-                     smallIcon: 'ic_stat_sun',
+                     smallIcon: 'ic_launcher',
                      extra: { type: 'rahu_end' }
                  });
              }
@@ -250,7 +258,7 @@ export const useNotificationOrchestrator = (
                      schedule: { at: startT },
                      channelId: VOICE_CHANNEL_ID,
                      sound: 'voice_success.wav',
-                     smallIcon: Capacitor.getPlatform() === 'web' ? assets.icon : 'ic_stat_sun',
+                     smallIcon: Capacitor.getPlatform() === 'web' ? assets.icon : 'ic_launcher',
                      largeIcon: assets.banner,
                      attachments: [{ id: 'image', url: assets.banner }],
                      extra: { type: 'abhijeet', banner: assets.banner }
@@ -275,7 +283,7 @@ export const useNotificationOrchestrator = (
                      schedule: { at: morning },
                      channelId: VOICE_CHANNEL_ID,
                      sound: 'voice_success.wav',
-                     smallIcon: Capacitor.getPlatform() === 'web' ? assets.icon : 'ic_stat_sun',
+                     smallIcon: Capacitor.getPlatform() === 'web' ? assets.icon : 'ic_launcher',
                      largeIcon: assets.banner,
                      attachments: [{ id: 'image', url: assets.banner }],
                      extra: { type: 'tithi', banner: assets.banner }
@@ -307,7 +315,7 @@ export const useNotificationOrchestrator = (
     }
   }, [panchangData, voiceEnabled]); 
 
-  // 5. Manual Test Function (UPDATED FOR RAHU TEST)
+  // 5. Manual Test Function
   const testNotification = async () => {
     let perm = await LocalNotifications.checkPermissions();
     if (perm.display !== 'granted') {
@@ -364,7 +372,7 @@ export const useNotificationOrchestrator = (
                     schedule: { at: triggerTime, allowWhileIdle: true },
                     channelId: VOICE_CHANNEL_ID,
                     sound: testSound,
-                    smallIcon: 'ic_stat_sun', 
+                    smallIcon: 'ic_launcher', 
                     largeIcon: testBanner,
                     actionTypeId: 'OPEN_PANCHANG',
                     extra: { type: 'test_abhijeet' }
