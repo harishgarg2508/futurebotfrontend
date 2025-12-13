@@ -147,7 +147,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ defaultView = 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="absolute top-4 left-4 z-50 flex gap-2"
+              className="absolute top-4 left-4 z-50"
             >
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -156,16 +156,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ defaultView = 
                 className="p-3 bg-gradient-to-r from-violet-600 to-purple-600 backdrop-blur-xl border border-violet-400/30 rounded-xl text-white hover:from-violet-500 hover:to-purple-500 transition-all shadow-lg shadow-violet-500/30"
               >
                 <PanelLeftOpen size={18} />
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleLogout}
-                className="p-3 bg-rose-500/20 backdrop-blur-xl border border-rose-400/30 rounded-xl text-rose-300 hover:bg-rose-500/40 hover:text-white transition-all shadow-lg shadow-rose-500/10"
-                title="Sign Out"
-              >
-                <LogOut size={18} />
               </motion.button>
             </motion.div>
           )}

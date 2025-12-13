@@ -10,7 +10,7 @@ import StepTime from "@/components/onboarding/StepTime"
 import StepLocation from "@/components/onboarding/StepLocation"
 import StepLogin from "@/components/onboarding/StepLogin"
 import FloatingStars from "@/components/onboarding/FloatingStars"
-import { Sparkles, Loader2, LogIn } from "lucide-react"
+import { Sparkles, Loader2, LogIn, LogOut } from "lucide-react"
 import { CosmicOrb } from "@/components/ui/CosmicOrb"
 import { getBirthChart } from "@/services/api/birthChart"
 import { useAppStore } from "@/lib/store"
@@ -27,7 +27,7 @@ type Phase = "landing" | "name" | "date" | "time" | "location" | "login" | "awak
 
 export default function Home() {
   const { t } = useTranslation()
-  const { user, signInWithGoogle, loading } = useAuth()
+  const { user, signInWithGoogle, loading, logout } = useAuth()
   // Global Notification Permission Hook
   const { showPermissionBanner, requestWebPermissions, dismissPermissionBanner } = useNotificationOrchestrator();
 
@@ -44,6 +44,9 @@ export default function Home() {
     lon: null as number | null,
     city: ""
   })
+
+  // Watch for Auth changes to set initial phase if needed
+  // Note: We want to stay on landing if user is logged in, to show Main Home Page.
 
   const handleNext = (data: any) => {
     setOnboardData(prev => ({ ...prev, ...data }))
@@ -63,25 +66,24 @@ export default function Home() {
         if (!user) {
             await signInWithGoogle()
         }
-        // Only advance if login didn't throw (user signed in)
+        // Redirect to Landing Page (Main Home with Orb/Services)
         setPhase("awakening")
-        setTimeout(() => setPhase("dashboard"), 2500)
+        setTimeout(() => setPhase("landing"), 2500)
     } catch (error) {
         console.error("Login cancelled or failed", error)
-        // Stay on login step so user can try again
     }
   }
   
   const handleDirectLogin = async () => {
     try {
         await signInWithGoogle()
-        // Success! Enter the app
-        setPhase("awakening")
-        setTimeout(() => setPhase("dashboard"), 2500)
+        // Stay on Landing Page
+        setPhase("landing") 
     } catch (error) {
         console.error("Direct login failed", error)
     }
   } 
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#0a0612]">
@@ -103,7 +105,6 @@ export default function Home() {
         {/* Landing */}
         {phase === "landing" && (
           <motion.div
-
             key="landing"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -111,6 +112,19 @@ export default function Home() {
             className="flex flex-col items-center justify-center min-h-screen relative"
           >
             <FloatingStars />
+            
+            {/* LOGOUT BUTTON - Visible only when logged in on Landing Page */}
+            {user && (
+                <div className="absolute top-4 left-4 z-50">
+                    <button 
+                        onClick={() => logout()}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all text-xs uppercase tracking-wider font-medium backdrop-blur-md"
+                    >
+                        <LogOut size={14} />
+                        <span>{t('common.logout', 'Sign Out')}</span>
+                    </button>
+                </div>
+            )}
 
             <div className="relative z-10 flex flex-col items-center space-y-16 w-full max-w-7xl mx-auto px-4">
               {/* Logo */}
@@ -130,7 +144,6 @@ export default function Home() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                 >
-                  {/* Simplification for i18n: render full title with gradient on second half if possible, or just full gradient */}
                   <span className="bg-gradient-to-r from-[var(--color-light)] to-[var(--color-lavender)] bg-clip-text text-transparent">
                       {t('welcome')}
                   </span>
