@@ -21,6 +21,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Skip auth if Firebase is not initialized (during build or missing config)
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
@@ -29,11 +35,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signInWithGoogle = async () => {
+    if (!auth || !googleProvider) {
+      console.warn('Firebase not initialized');
+      return;
+    }
     // Let the caller handle errors
     await signInWithPopup(auth, googleProvider);
   };
 
   const logout = async () => {
+    if (!auth) {
+      console.warn('Firebase not initialized');
+      return;
+    }
     try {
       await signOut(auth);
     } catch (error) {

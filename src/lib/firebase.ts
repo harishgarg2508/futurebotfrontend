@@ -1,6 +1,6 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider, Auth } from "firebase/auth";
+import { getFirestore, Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -12,10 +12,20 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
-const db = getFirestore(app);
-const googleProvider = new GoogleAuthProvider();
+// Check if we have the required config
+const hasFirebaseConfig = firebaseConfig.apiKey && firebaseConfig.projectId;
+
+// Initialize Firebase only if config exists and we're in browser
+let app: FirebaseApp | undefined;
+let auth: Auth | undefined;
+let db: Firestore | undefined;
+let googleProvider: GoogleAuthProvider | undefined;
+
+if (hasFirebaseConfig && typeof window !== 'undefined') {
+  app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+  auth = getAuth(app);
+  db = getFirestore(app);
+  googleProvider = new GoogleAuthProvider();
+}
 
 export { auth, db, googleProvider };
