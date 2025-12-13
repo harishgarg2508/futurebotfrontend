@@ -359,15 +359,31 @@ export const useNotificationOrchestrator = (
         }
 
         // 2. Schedule Notification (simulated delay)
-        setTimeout(() => {
-            const n = new Notification("Test Abhijeet Alert " + new Date().toLocaleTimeString(), {
+        setTimeout(async () => {
+            const title = "Test Abhijeet Alert " + new Date().toLocaleTimeString();
+            const options: any = {
                 body: "✨ Abhijeet Muhurat Begins! Best time for success.",
                 icon: '/icons/icon-192x192.png',
-                image: assets.banner, 
+                image: assets.banner,
                 requireInteraction: true,
-                silent: true
-            } as NotificationOptions & { image?: string });
-            
+                silent: false 
+            };
+
+            // Try Service Worker First (Best for PWA)
+            if ('serviceWorker' in navigator) {
+                try {
+                    const reg = await navigator.serviceWorker.getRegistration();
+                    if (reg) {
+                        await reg.showNotification(title, options);
+                        return;
+                    }
+                } catch (e) {
+                    console.error("SW Notification Failed", e);
+                }
+            }
+
+            // Fallback to standard API
+            const n = new Notification(title, options);
             n.onclick = () => { window.focus(); n.close(); };
         }, 5000);
 
