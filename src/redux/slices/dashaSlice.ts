@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import axios from 'axios';
+import backendClient from '@/lib/backendClient';
 
 interface DashaPeriod {
   level: number;
@@ -28,7 +28,7 @@ export const fetchDashaPeriods = createAsyncThunk(
   'dasha/fetchPeriods',
   async ({ birthDetails, parentLords }: { birthDetails: any; parentLords: string[] }, { rejectWithValue }) => {
     try {
-      const response = await axios.post('/api/dasha', {
+      const response = await backendClient.post('/calculate/dasha-periods', {
         ...birthDetails,
         parent_lords: parentLords,
       });

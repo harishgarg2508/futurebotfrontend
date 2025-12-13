@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import axios from 'axios';
+import backendClient from '@/lib/backendClient';
 import { CACHE_KEYS, getFromCache, saveToCache } from '@/lib/cache';
 
 interface GocharState {
@@ -30,7 +30,7 @@ export const fetchDailyTransits = createAsyncThunk(
     const cached = getFromCache(cacheKey);
     if (cached) return cached;
 
-    const response = await axios.post('/api/gochar/daily', {
+    const response = await backendClient.post('/calculate/daily-transits', {
       current_date: date
     });
     
@@ -51,7 +51,7 @@ export const fetchNatalData = createAsyncThunk(
     if (cached) return cached;
 
     // Use existing chart endpoint to get Ascendant/Moon
-    const response = await axios.post('/api/birth-chart', payload.birthDetails);
+    const response = await backendClient.post('/calculate/chart', payload.birthDetails);
     
     // Extract only needed data
     const natalData = {

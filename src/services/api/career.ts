@@ -1,4 +1,4 @@
-import axios from 'axios';
+import backendClient from '@/lib/backendClient';
 
 export interface CareerPredictionData {
   date: string;
@@ -22,7 +22,7 @@ export const getCareerPrediction = async (data: CareerPredictionData) => {
 
   console.log("Calling Career Prediction API...");
   try {
-    const response = await axios.post('/api/career', {
+    const response = await backendClient.post('/predict/career', {
       ...data,
       timezone: data.timezone || 'Asia/Kolkata',
     });

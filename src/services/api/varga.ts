@@ -1,4 +1,4 @@
-import axios from 'axios';
+import backendClient from '@/lib/backendClient';
 
 export interface VargaData {
   date: string;
@@ -10,7 +10,7 @@ export interface VargaData {
 
 export const getVargaChart = async (data: VargaData) => {
   try {
-    const response = await axios.post('/api/varga', data);
+    const response = await backendClient.post('/calculate/varga', data);
     return response.data;
   } catch (error) {
     console.error('Error fetching varga chart:', error);
